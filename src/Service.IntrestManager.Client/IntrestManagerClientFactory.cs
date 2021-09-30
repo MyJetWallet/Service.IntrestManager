@@ -11,6 +11,6 @@ namespace Service.IntrestManager.Client
         {
         }
 
-        public IHelloService GetHelloService() => CreateGrpcService<IHelloService>();
+        public IInterestRateSettingsService GetHelloService() => CreateGrpcService<IInterestRateSettingsService>();
     }
 }

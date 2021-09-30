@@ -5,13 +5,16 @@ namespace Service.IntrestManager.Settings
 {
     public class SettingsModel
     {
-        [YamlProperty("IntrestManager.SeqServiceUrl")]
+        [YamlProperty("InterestManager.SeqServiceUrl")]
         public string SeqServiceUrl { get; set; }
 
-        [YamlProperty("IntrestManager.ZipkinUrl")]
+        [YamlProperty("InterestManager.ZipkinUrl")]
         public string ZipkinUrl { get; set; }
 
-        [YamlProperty("IntrestManager.ElkLogs")]
+        [YamlProperty("InterestManager.ElkLogs")]
         public LogElkSettings ElkLogs { get; set; }
+
+        [YamlProperty("InterestManager.MyNoSqlWriterUrl")]
+        public string MyNoSqlWriterUrl { get; set; }
     }
 }

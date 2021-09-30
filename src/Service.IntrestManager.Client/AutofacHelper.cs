@@ -7,11 +7,11 @@ namespace Service.IntrestManager.Client
 {
     public static class AutofacHelper
     {
-        public static void RegisterIntrestManagerClient(this ContainerBuilder builder, string grpcServiceUrl)
+        public static void RegisterInterestManagerClient(this ContainerBuilder builder, string grpcServiceUrl)
         {
             var factory = new IntrestManagerClientFactory(grpcServiceUrl);
 
-            builder.RegisterInstance(factory.GetHelloService()).As<IHelloService>().SingleInstance();
+            builder.RegisterInstance(factory.GetHelloService()).As<IInterestRateSettingsService>().SingleInstance();
         }
     }
 }

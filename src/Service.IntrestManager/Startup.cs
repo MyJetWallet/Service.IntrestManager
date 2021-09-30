@@ -50,7 +50,7 @@ namespace Service.IntrestManager
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcSchema<HelloService, IHelloService>();
+                endpoints.MapGrpcSchema<InterestRateSettingsService, IInterestRateSettingsService>();
 
                 endpoints.MapGrpcSchemaRegistry();
 
