@@ -6,6 +6,6 @@ namespace Service.IntrestManager.Grpc.Models
     [DataContract]
     public class RemoveInterestRateSettingsRequest
     {
-        [DataMember(Order = 1)] public InterestRate InterestRate { get; set; }
+        [DataMember(Order = 1)] public InterestRateSettings InterestRateSettings { get; set; }
     }
 }

@@ -16,5 +16,8 @@ namespace Service.IntrestManager.Settings
 
         [YamlProperty("InterestManager.MyNoSqlWriterUrl")]
         public string MyNoSqlWriterUrl { get; set; }
+
+        [YamlProperty("InterestManager.PostgresConnectionString")]
+        public string PostgresConnectionString { get; set; }
     }
 }

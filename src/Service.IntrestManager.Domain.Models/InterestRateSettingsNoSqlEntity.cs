@@ -2,22 +2,22 @@ using MyNoSqlServer.Abstractions;
 
 namespace Service.IntrestManager.Domain.Models
 {
-    public class InterestRateNoSqlEntity : MyNoSqlDbEntity
+    public class InterestRateSettingsNoSqlEntity : MyNoSqlDbEntity
     {
-        public const string TableName = "jetwallet-interest-rate";
+        public const string TableName = "jetwallet-interest-rate-settings";
         public static string GeneratePartitionKey(string walletId, string asset) => walletId + "-" + asset;
 
         public static string GenerateRowKey(decimal rangeFrom, decimal rangeTo) => rangeFrom + "-" + rangeTo;
 
-        public InterestRate InterestRate;
+        public InterestRateSettings InterestRateSettings;
         
-        public static InterestRateNoSqlEntity Create(InterestRate entity)
+        public static InterestRateSettingsNoSqlEntity Create(InterestRateSettings entity)
         {
-            return new InterestRateNoSqlEntity()
+            return new InterestRateSettingsNoSqlEntity()
             {
                 PartitionKey = GeneratePartitionKey(entity.WalletId, entity.Asset),
                 RowKey = GenerateRowKey(entity.RangeFrom, entity.RangeTo),
-                InterestRate = entity
+                InterestRateSettings = entity
             };
         }
     }

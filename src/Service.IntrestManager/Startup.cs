@@ -7,9 +7,11 @@ using Microsoft.Extensions.Hosting;
 using Autofac;
 using MyJetWallet.Sdk.GrpcMetrics;
 using MyJetWallet.Sdk.GrpcSchema;
+using MyJetWallet.Sdk.Postgres;
 using MyJetWallet.Sdk.Service;
 using Prometheus;
 using ProtoBuf.Grpc.Server;
+using Service.InterestManager.Postrges;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Modules;
 using Service.IntrestManager.Services;
@@ -27,10 +29,10 @@ namespace Service.IntrestManager
                 options.Interceptors.Add<PrometheusMetricsInterceptor>();
                 options.BindMetricsInterceptors();
             });
-
             services.AddHostedService<ApplicationLifetimeManager>();
-
             services.AddMyTelemetry("SP-", Program.Settings.ZipkinUrl);
+            services.AddDatabase(DatabaseContext.Schema, Program.Settings.PostgresConnectionString, 
+                o => new DatabaseContext(o));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

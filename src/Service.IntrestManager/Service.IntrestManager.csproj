@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Service.InterestManager.Postgres\Service.InterestManager.Postgres.csproj" />
     <ProjectReference Include="..\Service.IntrestManager.Domain\Service.IntrestManager.Domain.csproj" />
     <ProjectReference Include="..\Service.IntrestManager.Grpc\Service.IntrestManager.Grpc.csproj" />
   </ItemGroup>

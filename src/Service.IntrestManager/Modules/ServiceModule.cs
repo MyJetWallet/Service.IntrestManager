@@ -2,7 +2,9 @@
 using Autofac.Core;
 using Autofac.Core.Registration;
 using MyJetWallet.Sdk.NoSql;
+using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Services;
 
 namespace Service.IntrestManager.Modules
 {
@@ -10,8 +12,13 @@ namespace Service.IntrestManager.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterMyNoSqlWriter<InterestRateNoSqlEntity>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
-                InterestRateNoSqlEntity.TableName);
+            builder.RegisterMyNoSqlWriter<InterestRateSettingsNoSqlEntity>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
+                InterestRateSettingsNoSqlEntity.TableName);
+
+            builder
+                .RegisterType<InterestRateSettingsStorage>()
+                .As<IInterestRateSettingsStorage>()
+                .SingleInstance();
         }
     }
 }

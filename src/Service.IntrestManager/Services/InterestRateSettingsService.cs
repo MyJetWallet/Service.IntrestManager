@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using MyNoSqlServer.Abstractions;
-using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
 
@@ -12,24 +10,24 @@ namespace Service.IntrestManager.Services
     public class InterestRateSettingsService: IInterestRateSettingsService
     {
         private readonly ILogger<InterestRateSettingsService> _logger;
-        private readonly IMyNoSqlServerDataWriter<InterestRateNoSqlEntity> _interestRateWriter;
+        private readonly IInterestRateSettingsStorage _interestRateSettingsStorage;
 
         public InterestRateSettingsService(ILogger<InterestRateSettingsService> logger, 
-            IMyNoSqlServerDataWriter<InterestRateNoSqlEntity> interestRateWriter)
+            IInterestRateSettingsStorage interestRateSettingsStorage)
         {
             _logger = logger;
-            _interestRateWriter = interestRateWriter;
+            _interestRateSettingsStorage = interestRateSettingsStorage;
         }
 
         public async Task<GetInterestRateSettingsResponse> GetInterestRateSettingsAsync()
         {
             try
             {
-                var rates = await _interestRateWriter.GetAsync();
+                var rates = await _interestRateSettingsStorage.GetSettings();
                 return new GetInterestRateSettingsResponse()
                 {
                     Success = true,
-                    InterestRateCollection = rates.Select(e => e.InterestRate).ToList()
+                    InterestRateCollection = rates
                 };
             }
             catch (Exception ex)
@@ -47,8 +45,7 @@ namespace Service.IntrestManager.Services
         {
             try
             {
-                var noSqlEntity = InterestRateNoSqlEntity.Create(request.InterestRate);
-                await _interestRateWriter.InsertOrReplaceAsync(noSqlEntity);
+                await _interestRateSettingsStorage.UpsertSettings(request.InterestRateSettings);
                 
                 return new UpsertInterestRateSettingsResponse()
                 {
@@ -70,8 +67,7 @@ namespace Service.IntrestManager.Services
         {
             try
             {
-                await _interestRateWriter.DeleteAsync(InterestRateNoSqlEntity.GeneratePartitionKey(request.InterestRate.WalletId, request.InterestRate.Asset),
-                    InterestRateNoSqlEntity.GenerateRowKey(request.InterestRate.RangeFrom, request.InterestRate.RangeTo));
+                await _interestRateSettingsStorage.RemoveSettings(request.InterestRateSettings);
 
                 return new RemoveInterestRateSettingsResponse()
                 {
