@@ -10,6 +10,6 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 3)] public string Asset { get; set; }
         [DataMember(Order = 4)] public decimal RangeFrom { get; set; }
         [DataMember(Order = 5)] public decimal RangeTo { get; set; }
-        [DataMember(Order = 6)] public string Apy { get; set; }
+        [DataMember(Order = 6)] public decimal Apy { get; set; }
     }
 }

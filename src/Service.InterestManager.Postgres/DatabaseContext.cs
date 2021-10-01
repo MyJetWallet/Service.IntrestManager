@@ -12,8 +12,10 @@ namespace Service.InterestManager.Postrges
         public const string Schema = "interest_manager";
         
         private const string InterestRateSettingsTableName = "interestratesettings";
+        private const string InterestRateCalculationTableName = "interestratecalculation";
         
         private DbSet<InterestRateSettings> InterestRateSettingsCollection { get; set; }
+        private DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
         
         public DatabaseContext(DbContextOptions options) : base(options)
         {
@@ -33,8 +35,29 @@ namespace Service.InterestManager.Postrges
             modelBuilder.HasDefaultSchema(Schema);
 
             SetInterestRateSettingsEntity(modelBuilder);
+            SetInterestRateCalculationEntity(modelBuilder);
             
             base.OnModelCreating(modelBuilder);
+        }
+
+        private void SetInterestRateCalculationEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<InterestRateCalculation>().ToTable(InterestRateCalculationTableName);
+            
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Id).UseIdentityColumn();
+            modelBuilder.Entity<InterestRateCalculation>().HasKey(e => e.Id);
+            
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.WalletId).HasMaxLength(64);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Symbol).HasMaxLength(64);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.NewBalance);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Apy);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Amount);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Date);
+            
+            modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
+            modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol});
+            modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.WalletId);
+            modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.Symbol);
         }
 
         private void SetInterestRateSettingsEntity(ModelBuilder modelBuilder)

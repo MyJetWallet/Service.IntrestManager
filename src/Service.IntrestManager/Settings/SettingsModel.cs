@@ -19,5 +19,8 @@ namespace Service.IntrestManager.Settings
 
         [YamlProperty("InterestManager.PostgresConnectionString")]
         public string PostgresConnectionString { get; set; }
+
+        [YamlProperty("InterestManager.InterestCalculationTimerInSeconds")]
+        public int InterestCalculationTimerInSeconds { get; set; }
     }
 }
