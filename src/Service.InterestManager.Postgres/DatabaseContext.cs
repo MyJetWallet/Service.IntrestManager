@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -103,6 +106,17 @@ namespace Service.InterestManager.Postrges
                 InterestRateSettingsCollection.Remove(entity);
                 await SaveChangesAsync();
             }
+        }
+
+        public async Task ExecCalculationAsync(DateTime date)
+        {
+            return;
+            using var script = new StreamReader("Scripts/CalculationScript.sql");
+            var scriptBody = await script.ReadToEndAsync();
+            var dateAtg = $"{date.Year}-{date.Month}-{date.Day} {date.Hour}:{date.Minute}";
+            var sqlText = FormattableStringFactory.Create(scriptBody, dateAtg);
+            
+            await Database.ExecuteSqlInterpolatedAsync(sqlText);
         }
     }
 }
