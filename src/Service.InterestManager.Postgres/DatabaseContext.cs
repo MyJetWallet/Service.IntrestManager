@@ -112,8 +112,9 @@ namespace Service.InterestManager.Postrges
         {
             try
             {
+                var path = Path.Combine(Environment.CurrentDirectory, @"Scripts/", "CalculationScript.sql");
                 using var script =
-                    new StreamReader("../Service.InterestManager.Postgres/Scripts/CalculationScript.sql");
+                    new StreamReader(path);
                 var scriptBody = await script.ReadToEndAsync();
                 var dateArg = $"{date.Year}-{date.Month.ToString().PadLeft(2, '0')}-{date.Day.ToString().PadLeft(2, '0')}" +
                               $" {date.Hour.ToString().PadLeft(2, '0')}:{date.Minute.ToString().PadLeft(2, '0')}";
