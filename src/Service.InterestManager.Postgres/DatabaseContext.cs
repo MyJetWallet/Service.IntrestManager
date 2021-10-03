@@ -108,15 +108,26 @@ namespace Service.InterestManager.Postrges
             }
         }
 
-        public async Task ExecCalculationAsync(DateTime date)
+        public async Task ExecCalculationAsync(DateTime date, ILogger logger)
         {
-            return;
-            using var script = new StreamReader("Scripts/CalculationScript.sql");
-            var scriptBody = await script.ReadToEndAsync();
-            var dateAtg = $"{date.Year}-{date.Month}-{date.Day} {date.Hour}:{date.Minute}";
-            var sqlText = FormattableStringFactory.Create(scriptBody, dateAtg);
-            
-            await Database.ExecuteSqlInterpolatedAsync(sqlText);
+            try
+            {
+                using var script =
+                    new StreamReader("../Service.InterestManager.Postgres/Scripts/CalculationScript.sql");
+                var scriptBody = await script.ReadToEndAsync();
+                var dateArg = $"{date.Year}-{date.Month.ToString().PadLeft(2, '0')}-{date.Day.ToString().PadLeft(2, '0')}" +
+                              $" {date.Hour.ToString().PadLeft(2, '0')}:{date.Minute.ToString().PadLeft(2, '0')}";
+                var sqlText = scriptBody.Replace("${dateArg}", dateArg);
+                
+                
+                logger.LogInformation($"ExecCalculationAsync start with date {dateArg}");
+                await Database.ExecuteSqlRawAsync(sqlText);
+                logger.LogInformation($"ExecCalculationAsync finish with date {dateArg}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
         }
     }
 }

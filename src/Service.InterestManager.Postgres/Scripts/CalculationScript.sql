@@ -22,13 +22,13 @@ select "WalletId", "Symbol", "NewBalance" from
     (
         select *, ROW_NUMBER() OVER (PARTITION BY "WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
         from balancehistory.balance_history
-        where "Timestamp" < timestamp {dateArg}
+        where "Timestamp" < timestamp '${dateArg}'
         order by "Timestamp" desc
     ) t where t.rank = 1;
 
 -- stage 1
 insert into temp_calculation
-select hd.*, s."Apy", (hd."newbalance" * s."Apy")/365 "Amount", date {dateArg}
+select hd.*, s."Apy", (hd."newbalance" * s."Apy")/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
 join interest_manager.interestratesettings s
     on hd."walletid" = s."WalletId"
@@ -38,7 +38,7 @@ join interest_manager.interestratesettings s
 
 -- stage 2
 insert into temp_calculation
-select hd.*, s."Apy", (hd."newbalance" * s."Apy")/365 "Amount", date {dateArg}
+select hd.*, s."Apy", (hd."newbalance" * s."Apy")/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
 join interest_manager.interestratesettings s
     on hd."walletid" = s."WalletId"
@@ -52,7 +52,7 @@ where tc.WalletId IS NULL;
 
 -- stage 3
 insert into temp_calculation
-select hd.*, s."Apy", (hd."newbalance" * s."Apy")/365 "Amount", date {dateArg}
+select hd.*, s."Apy", (hd."newbalance" * s."Apy")/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
 join interest_manager.interestratesettings s
     on s."WalletId" = ''

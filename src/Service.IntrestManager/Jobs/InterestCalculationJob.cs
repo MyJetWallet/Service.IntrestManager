@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Autofac;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using Service.InterestManager.Postrges;
@@ -27,7 +28,8 @@ namespace Service.IntrestManager.Jobs
         private async Task DoTime()
         {
             await using var ctx = _databaseContextFactory.Create();
-            await ctx.ExecCalculationAsync(DateTime.UtcNow);
+            ctx.Database.SetCommandTimeout(1200);
+            await ctx.ExecCalculationAsync(DateTime.UtcNow, _logger);
         }
 
         public void Start()
