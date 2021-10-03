@@ -113,7 +113,7 @@ namespace Service.InterestManager.Postrges
             try
             {
                 using var script =
-                    new StreamReader("../Service.InterestManager.Postgres/Scripts/CalculationScript.sql");
+                    new StreamReader("..\Service.InterestManager.Postgres\Scripts\CalculationScript.sql");
                 var scriptBody = await script.ReadToEndAsync();
                 var dateArg = $"{date.Year}-{date.Month.ToString().PadLeft(2, '0')}-{date.Day.ToString().PadLeft(2, '0')}" +
                               $" {date.Hour.ToString().PadLeft(2, '0')}:{date.Minute.ToString().PadLeft(2, '0')}";
