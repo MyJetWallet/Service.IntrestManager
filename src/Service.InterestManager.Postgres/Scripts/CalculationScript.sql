@@ -14,7 +14,7 @@ CREATE TEMPORARY TABLE temp_calculation
    NewBalance DECIMAL,
    Apy DECIMAL,
    Amount DECIMAL,
-   Date DATE
+   Date TIMESTAMP 
 ) ON COMMIT DROP;
 
 insert into temp_new_balances
