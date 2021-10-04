@@ -34,6 +34,11 @@ namespace Service.IntrestManager.Modules
                 .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
+            builder
+                .RegisterType<InterestProcessingJob>()
+                .As<IStartable>()
+                .AutoActivate()
+                .SingleInstance();
         }
     }
 }

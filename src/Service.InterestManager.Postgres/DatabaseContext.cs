@@ -113,6 +113,15 @@ namespace Service.InterestManager.Postrges
             return InterestRatePaidCollection.OrderByDescending(e => e.Date).Take(1).FirstOrDefault();
         }
 
+        public List<InterestRatePaid> GetNewPaidCollection()
+        {
+            return InterestRatePaidCollection
+                .Where(e => e.State == PaidState.New)
+                .OrderBy(e => e.Date)
+                .Take(100)
+                .ToList();
+        }
+
         public async Task SavePaidCollection(IEnumerable<InterestRatePaid> collection)
         {
             await InterestRatePaidCollection

@@ -25,5 +25,8 @@ namespace Service.IntrestManager.Settings
         
         [YamlProperty("InterestManager.PaidCalculationTimerInSeconds")]
         public int PaidCalculationTimerInSeconds { get; set; }
+
+        [YamlProperty("InterestManager.InterestProcessingTimerInSeconds")]
+        public int InterestProcessingTimerInSeconds { get; set; }
     }
 }
