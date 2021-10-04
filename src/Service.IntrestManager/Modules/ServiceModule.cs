@@ -29,6 +29,11 @@ namespace Service.IntrestManager.Modules
                 .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
+            builder
+                .RegisterType<PaidCalculationJob>()
+                .As<IStartable>()
+                .AutoActivate()
+                .SingleInstance();
         }
     }
 }

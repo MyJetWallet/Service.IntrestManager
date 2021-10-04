@@ -27,6 +27,23 @@ namespace Service.IntrestManager.Jobs
 
         private async Task DoTime()
         {
+            if (await CalculationExpected())
+            {
+                await CalculateInterest();
+            }
+        }
+
+        private async Task<bool> CalculationExpected()
+        {
+            await using var ctx = _databaseContextFactory.Create();
+            var lastCalculation = ctx.GetLastCalculation();
+
+            var calculationExpected = lastCalculation.Date.Date != DateTime.UtcNow.Date;
+            return calculationExpected;
+        }
+
+        private async Task CalculateInterest()
+        {
             await using var ctx = _databaseContextFactory.Create();
             ctx.Database.SetCommandTimeout(1200);
             await ctx.ExecCalculationAsync(DateTime.UtcNow, _logger);

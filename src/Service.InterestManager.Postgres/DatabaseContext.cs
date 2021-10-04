@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,9 +15,11 @@ namespace Service.InterestManager.Postrges
         
         private const string InterestRateSettingsTableName = "interestratesettings";
         private const string InterestRateCalculationTableName = "interestratecalculation";
+        private const string InterestRatePaidTableName = "interestratepaid";
         
         private DbSet<InterestRateSettings> InterestRateSettingsCollection { get; set; }
         private DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
+        private DbSet<InterestRatePaid> InterestRatePaidCollection { get; set; }
         
         public DatabaseContext(DbContextOptions options) : base(options)
         {
@@ -39,8 +40,30 @@ namespace Service.InterestManager.Postrges
 
             SetInterestRateSettingsEntity(modelBuilder);
             SetInterestRateCalculationEntity(modelBuilder);
+            SetInterestRatePaidEntity(modelBuilder);
             
             base.OnModelCreating(modelBuilder);
+        }
+
+        private void SetInterestRatePaidEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<InterestRatePaid>().ToTable(InterestRatePaidTableName);
+            
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.Id).UseIdentityColumn();
+            modelBuilder.Entity<InterestRatePaid>().HasKey(e => e.Id);
+            
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.WalletId).HasMaxLength(64);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.Symbol).HasMaxLength(64);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.Date);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.Amount);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.State);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.ErrorMessage);
+            
+            modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
+            modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol});
+            modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.WalletId);
+            modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.Symbol);
+            modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.State);
         }
 
         private void SetInterestRateCalculationEntity(ModelBuilder modelBuilder)
@@ -80,6 +103,30 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset});
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.Asset);
+        }
+        public InterestRateCalculation GetLastCalculation()
+        {
+            return InterestRateCalculationCollection.OrderByDescending(e => e.Date).Take(1).FirstOrDefault();
+        }
+        public InterestRatePaid GetLastPaid()
+        {
+            return InterestRatePaidCollection.OrderByDescending(e => e.Date).Take(1).FirstOrDefault();
+        }
+
+        public async Task SavePaidCollection(IEnumerable<InterestRatePaid> collection)
+        {
+            await InterestRatePaidCollection
+                .UpsertRange(collection)
+                .On(e => new {e.WalletId, e.Symbol, e.Date})
+                .NoUpdate()
+                .RunAsync();
+        }
+
+        public List<InterestRateCalculation> GetInterestRateCalculationByDate(DateTime dateFrom, DateTime dateTo)
+        {
+            return InterestRateCalculationCollection
+                .Where(e => e.Date >= dateFrom && e.Date < dateTo)
+                .ToList();
         }
 
         public List<InterestRateSettings> GetSettings()
