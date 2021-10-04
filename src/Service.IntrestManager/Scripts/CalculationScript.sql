@@ -64,12 +64,16 @@ left join temp_calculation tc
         and hd."walletid" = tc.WalletId
 where tc.WalletId IS NULL;
 
+
+delete from interest_manager.interestratecalculation
+where date = timestamp '${dateArg}'
+
 insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date")
 select walletid, symbol, newbalance, apy, amount, date from temp_calculation
-on conflict ("WalletId", "Symbol", "Date")
-DO UPDATE
-SET "NewBalance" = excluded."NewBalance",
-    "Apy" = excluded."Apy",
-    "Amount" = excluded."Amount";
+--on conflict ("WalletId", "Symbol", "Date")
+--DO UPDATE
+--SET "NewBalance" = excluded."NewBalance",
+--    "Apy" = excluded."Apy",
+--    "Amount" = excluded."Amount";
 
 COMMIT;
