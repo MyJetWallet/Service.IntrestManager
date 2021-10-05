@@ -10,7 +10,7 @@ using Service.IntrestManager.Services;
 
 namespace Service.IntrestManager.Modules
 {
-    public class ServiceModule: Module
+    public class ServiceModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {

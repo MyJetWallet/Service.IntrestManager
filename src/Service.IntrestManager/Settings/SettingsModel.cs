@@ -28,5 +28,11 @@ namespace Service.IntrestManager.Settings
 
         [YamlProperty("InterestManager.InterestProcessingTimerInSeconds")]
         public int InterestProcessingTimerInSeconds { get; set; }
+
+        [YamlProperty("InterestManager.ChangeBalanceGatewayGrpcServiceUrl")]
+        public string ChangeBalanceGatewayGrpcServiceUrl { get; set; }
+
+        [YamlProperty("InterestManager.ClientWalletsGrpcServiceUrl")]
+        public string ClientWalletsGrpcServiceUrl { get; set; }
     }
 }
