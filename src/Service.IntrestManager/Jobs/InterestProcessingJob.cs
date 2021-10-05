@@ -77,9 +77,11 @@ namespace Service.IntrestManager.Jobs
                 foreach (var interestRatePaid in paidToProcess)
                 {
                     var client = allClients.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
+                    var transactionId = Guid.NewGuid().ToString();
+                    
                     var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
                     {
-                        TransactionId = Guid.NewGuid().ToString(),
+                        TransactionId = transactionId,
                         ClientId = client?.ClientId,
                         FromWalletId = fromWallet,
                         ToWalletId = interestRatePaid.WalletId,
@@ -95,6 +97,7 @@ namespace Service.IntrestManager.Jobs
                         interestRatePaid.State = PaidState.Completed;
                         await _publisher.PublishAsync(new PaidInterestRateMessage()
                         {
+                            TransactionId = transactionId,
                             WalletId = interestRatePaid.WalletId,
                             Symbol = interestRatePaid.Symbol,
                             Date = DateTime.UtcNow,
