@@ -52,7 +52,6 @@ namespace Service.IntrestManager.Jobs
 
         private async Task ProcessInterest()
         {
-            return;
             await using var ctx = _databaseContextFactory.Create();
             var paidToProcess = ctx.GetNewPaidCollection();
             var allClients = new List<ClientGrpc>();
