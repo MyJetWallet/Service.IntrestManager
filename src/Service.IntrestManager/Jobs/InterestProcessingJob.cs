@@ -11,6 +11,7 @@ using Service.ClientWallets.Grpc;
 using Service.ClientWallets.Grpc.Models;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Grpc;
 
 namespace Service.IntrestManager.Jobs
 {
@@ -21,16 +22,19 @@ namespace Service.IntrestManager.Jobs
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
         private readonly IClientWalletService _clientWalletService;
+        private readonly IInterestManagerConfigService _interestManagerConfigService;
 
         public InterestProcessingJob(ILogger<InterestProcessingJob> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
-            IClientWalletService clientWalletService)
+            IClientWalletService clientWalletService, 
+            IInterestManagerConfigService interestManagerConfigService)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _spotChangeBalanceService = spotChangeBalanceService;
             _clientWalletService = clientWalletService;
+            _interestManagerConfigService = interestManagerConfigService;
 
             _timer = new MyTaskTimer(nameof(InterestProcessingJob), 
                 TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
@@ -48,6 +52,16 @@ namespace Service.IntrestManager.Jobs
             await using var ctx = _databaseContextFactory.Create();
             var paidToProcess = ctx.GetNewPaidCollection();
             var allClients = new List<ClientGrpc>();
+            var fromWalletResponse = await _interestManagerConfigService.GetInterestManagerConfigAsync();
+
+            if (!fromWalletResponse.Success ||
+                fromWalletResponse.Config == null ||
+                string.IsNullOrWhiteSpace(fromWalletResponse.Config.ServiceWallet))
+            {
+                _logger.LogError("Cannot process interest. Service wallet IS EMPTY !!!!");
+                return;
+            }
+            var fromWallet = fromWalletResponse.Config.ServiceWallet;
 
             if (paidToProcess.Any())
             {
@@ -60,12 +74,11 @@ namespace Service.IntrestManager.Jobs
                 foreach (var interestRatePaid in paidToProcess)
                 {
                     var client = allClients.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
-                    
                     var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
                     {
                         TransactionId = Guid.NewGuid().ToString(),
                         ClientId = client?.ClientId,
-                        FromWalletId = string.Empty, // todo: replace
+                        FromWalletId = fromWallet,
                         ToWalletId = interestRatePaid.WalletId,
                         Amount = (double) interestRatePaid.Amount,
                         AssetSymbol = interestRatePaid.Symbol,
@@ -84,11 +97,9 @@ namespace Service.IntrestManager.Jobs
                         interestRatePaid.State = PaidState.Failed;
                         interestRatePaid.ErrorMessage = $"{processResponse.ErrorCode}: {processResponse.ErrorMessage}";
                     }
-
                 }
                 await ctx.SaveChangesAsync();
                 _logger.LogInformation($"InterestProcessingJob finish process {paidToProcess.Count} records.");
-
                 paidToProcess = ctx.GetNewPaidCollection() ?? new List<InterestRatePaid>();
             }
         }
