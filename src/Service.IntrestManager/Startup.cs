@@ -70,6 +70,7 @@ namespace Service.IntrestManager
             builder.RegisterModule<SettingsModule>();
             builder.RegisterModule<ServiceModule>();
             builder.RegisterModule<ClientModule>();
+            builder.RegisterModule<ServiceBusModule>();
         }
     }
 }

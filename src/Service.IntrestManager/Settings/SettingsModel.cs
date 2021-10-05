@@ -34,5 +34,8 @@ namespace Service.IntrestManager.Settings
 
         [YamlProperty("InterestManager.ClientWalletsGrpcServiceUrl")]
         public string ClientWalletsGrpcServiceUrl { get; set; }
+        
+        [YamlProperty("InterestManager.SpotServiceBusHostPort")]
+        public string SpotServiceBusHostPort { get; set; }
     }
 }

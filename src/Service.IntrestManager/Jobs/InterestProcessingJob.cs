@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using Service.ChangeBalanceGateway.Grpc;
@@ -23,18 +24,21 @@ namespace Service.IntrestManager.Jobs
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
         private readonly IClientWalletService _clientWalletService;
         private readonly IInterestManagerConfigService _interestManagerConfigService;
+        private readonly IPublisher<PaidInterestRateMessage> _publisher;
 
         public InterestProcessingJob(ILogger<InterestProcessingJob> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
             IClientWalletService clientWalletService, 
-            IInterestManagerConfigService interestManagerConfigService)
+            IInterestManagerConfigService interestManagerConfigService, 
+            IPublisher<PaidInterestRateMessage> publisher)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _spotChangeBalanceService = spotChangeBalanceService;
             _clientWalletService = clientWalletService;
             _interestManagerConfigService = interestManagerConfigService;
+            _publisher = publisher;
 
             _timer = new MyTaskTimer(nameof(InterestProcessingJob), 
                 TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
@@ -90,7 +94,13 @@ namespace Service.IntrestManager.Jobs
                     if (processResponse.Result)
                     {
                         interestRatePaid.State = PaidState.Completed;
-                        // todo: push to service bus
+                        await _publisher.PublishAsync(new PaidInterestRateMessage()
+                        {
+                            WalletId = interestRatePaid.WalletId,
+                            Symbol = interestRatePaid.Symbol,
+                            Date = DateTime.UtcNow,
+                            Amount = interestRatePaid.Amount
+                        });
                     }
                     else
                     {
