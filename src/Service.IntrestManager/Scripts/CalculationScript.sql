@@ -66,7 +66,7 @@ where tc.WalletId IS NULL;
 
 
 delete from interest_manager.interestratecalculation
-where date = timestamp '${dateArg}'
+where "Date" = timestamp '${dateArg}'
 
 insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date")
 select walletid, symbol, newbalance, apy, amount, date from temp_calculation

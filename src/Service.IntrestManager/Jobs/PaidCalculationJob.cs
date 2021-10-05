@@ -21,8 +21,7 @@ namespace Service.IntrestManager.Jobs
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
-
-
+            
             _timer = new MyTaskTimer(nameof(PaidCalculationJob), 
                 TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
             _logger.LogInformation($"PaidCalculationJob timer: {TimeSpan.FromSeconds(Program.Settings.PaidCalculationTimerInSeconds)}");
