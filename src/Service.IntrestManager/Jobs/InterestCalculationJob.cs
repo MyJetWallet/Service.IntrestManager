@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
 using Service.InterestManager.Postrges;
+using Service.IntrestManager.Domain.Models;
 
 namespace Service.IntrestManager.Jobs
 {

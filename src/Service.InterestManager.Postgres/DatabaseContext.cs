@@ -16,10 +16,14 @@ namespace Service.InterestManager.Postrges
         private const string InterestRateSettingsTableName = "interestratesettings";
         private const string InterestRateCalculationTableName = "interestratecalculation";
         private const string InterestRatePaidTableName = "interestratepaid";
+        private const string CalculationHistoryTableName = "calculationhistory";
+        private const string PaidHistoryTableName = "paidhistory";
         
         private DbSet<InterestRateSettings> InterestRateSettingsCollection { get; set; }
         private DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
         private DbSet<InterestRatePaid> InterestRatePaidCollection { get; set; }
+        private DbSet<CalculationHistory> CalculationHistoryCollection { get; set; }
+        private DbSet<PaidHistory> PaidHistoryCollection { get; set; }
         
         public DatabaseContext(DbContextOptions options) : base(options)
         {
@@ -41,8 +45,41 @@ namespace Service.InterestManager.Postrges
             SetInterestRateSettingsEntity(modelBuilder);
             SetInterestRateCalculationEntity(modelBuilder);
             SetInterestRatePaidEntity(modelBuilder);
+            SetCalculationHistoryEntity(modelBuilder);
+            SetPaidHistoryEntity(modelBuilder);
             
             base.OnModelCreating(modelBuilder);
+        }
+        
+        private void SetCalculationHistoryEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CalculationHistory>().ToTable(CalculationHistoryTableName);
+            
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.Id).UseIdentityColumn();
+            modelBuilder.Entity<CalculationHistory>().HasKey(e => e.Id);
+            
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.CompletedDate);
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.WalletCount);
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.AmountInWalletsInUsd);
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.CalculatedAmountInUsd);
+            
+            modelBuilder.Entity<CalculationHistory>().HasIndex(e => e.CompletedDate);
+        }
+
+        private void SetPaidHistoryEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<PaidHistory>().ToTable(PaidHistoryTableName);
+            
+            modelBuilder.Entity<PaidHistory>().Property(e => e.Id).UseIdentityColumn();
+            modelBuilder.Entity<PaidHistory>().HasKey(e => e.Id);
+            
+            modelBuilder.Entity<PaidHistory>().Property(e => e.CompletedDate);
+            modelBuilder.Entity<PaidHistory>().Property(e => e.RangeFrom);
+            modelBuilder.Entity<PaidHistory>().Property(e => e.RangeTo);
+            modelBuilder.Entity<PaidHistory>().Property(e => e.WalletCount);
+            modelBuilder.Entity<PaidHistory>().Property(e => e.TotalPaidInUsd);
+            
+            modelBuilder.Entity<PaidHistory>().HasIndex(e => e.CompletedDate);
         }
 
         private void SetInterestRatePaidEntity(ModelBuilder modelBuilder)
@@ -104,6 +141,19 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.Asset);
         }
+        
+        public async Task SavePaidHistory(PaidHistory entity)
+        {
+            PaidHistoryCollection.Add(entity);
+            await SaveChangesAsync();
+        }
+
+        public async Task SaveCalculationHistory(CalculationHistory entity)
+        {
+            CalculationHistoryCollection.Add(entity);
+            await SaveChangesAsync();
+        }
+        
         public InterestRateCalculation GetLastCalculation()
         {
             return InterestRateCalculationCollection.OrderByDescending(e => e.Date).Take(1).FirstOrDefault();
