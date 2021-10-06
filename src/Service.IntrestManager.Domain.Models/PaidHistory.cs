@@ -1,14 +1,16 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Service.IntrestManager.Domain.Models
 {
+    [DataContract]
     public class PaidHistory
     {
-        public long Id { get; set; }
-        public DateTime CompletedDate { get; set; }
-        public DateTime RangeFrom { get; set; }
-        public DateTime RangeTo { get; set; }
-        public int WalletCount { get; set; }
-        public decimal TotalPaidInUsd { get; set; }
+        [DataMember(Order = 1)] public long Id { get; set; }
+        [DataMember(Order = 2)] public DateTime CompletedDate { get; set; }
+        [DataMember(Order = 3)] public DateTime RangeFrom { get; set; }
+        [DataMember(Order = 4)] public DateTime RangeTo { get; set; }
+        [DataMember(Order = 5)] public int WalletCount { get; set; }
+        [DataMember(Order = 6)] public decimal TotalPaidInUsd { get; set; }
     }
 }

@@ -141,6 +141,16 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.Asset);
         }
+
+        public List<CalculationHistory> GetCalculationHistory()
+        {
+            return CalculationHistoryCollection.ToList();
+        }
+
+        public List<PaidHistory> GetPaidHistory()
+        {
+            return PaidHistoryCollection.ToList();
+        }
         
         public async Task SavePaidHistory(PaidHistory entity)
         {
