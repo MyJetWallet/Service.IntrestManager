@@ -61,7 +61,7 @@ namespace Service.IntrestManager.Engines
 
             if (paidToProcess.Any())
             {
-                allClients = (await _clientWalletService.GetAllClientsAsync()).Clients;
+                allClients = (await _clientWalletService.GetAllClientsAsync())?.Clients;
             }
             
             while (paidToProcess.Any())
@@ -69,7 +69,7 @@ namespace Service.IntrestManager.Engines
                 _logger.LogInformation($"InterestProcessingJob find {paidToProcess.Count} new records to process at {DateTime.UtcNow}.");
                 foreach (var interestRatePaid in paidToProcess)
                 {
-                    var client = allClients.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
+                    var client = allClients?.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
                     var transactionId = Guid.NewGuid().ToString();
                     
                     var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
