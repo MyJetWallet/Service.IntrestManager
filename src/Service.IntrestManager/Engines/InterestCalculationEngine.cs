@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 
@@ -12,12 +14,15 @@ namespace Service.IntrestManager.Engines
     {
         private readonly ILogger<InterestCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
+        private readonly IIndexPricesClient _indexPricesClient;
 
         public InterestCalculationEngine(ILogger<InterestCalculationEngine> logger, 
-            DatabaseContextFactory databaseContextFactory)
+            DatabaseContextFactory databaseContextFactory, 
+            IIndexPricesClient indexPricesClient)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
+            _indexPricesClient = indexPricesClient;
         }
 
         public async Task Execute()
@@ -45,16 +50,39 @@ namespace Service.IntrestManager.Engines
         {
             await using var ctx = _databaseContextFactory.Create();
             ctx.Database.SetCommandTimeout(1200);
-            await ctx.ExecCalculationAsync(DateTime.UtcNow, _logger);
 
-            await SaveCalculationHistory(ctx);
+            var calculationDate = DateTime.UtcNow;
+            await ctx.ExecCalculationAsync(calculationDate, _logger);
+
+            await SaveCalculationHistory(ctx, calculationDate);
         }
 
-        private async Task SaveCalculationHistory(DatabaseContext ctx)
+        private async Task SaveCalculationHistory(DatabaseContext ctx, DateTime calculationDate)
         {
+            var calculations = ctx.GetInterestRateCalculationByDate(calculationDate);
+            var walletCount = calculations.Select(e => e.WalletId).Distinct().Count();
+
+            var amountInWalletsInUsd = 0m;
+            var calculatedAmountInUsd = 0m;
+            foreach (var symbol in calculations.Select(e => e.Symbol).Distinct())
+            {
+                var calculationsBySymbol = calculations.Where(e => e.Symbol == symbol);
+                
+                var amountSum = calculationsBySymbol.Sum(e => e.Amount);
+                var (_, usdAmountVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, amountSum);
+                amountInWalletsInUsd += usdAmountVolume;
+                
+                var apySum = calculationsBySymbol.Sum(e => e.Apy);
+                var (_, usdApyVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, apySum);
+                calculatedAmountInUsd += usdApyVolume;
+            }
+            
             var calculationHistory = new CalculationHistory()
             {
-                CompletedDate = DateTime.UtcNow
+                CompletedDate = calculationDate,
+                WalletCount = walletCount,
+                AmountInWalletsInUsd = amountInWalletsInUsd,
+                CalculatedAmountInUsd = calculatedAmountInUsd
             };
             await ctx.SaveCalculationHistory(calculationHistory);
             _logger.LogInformation("Saved calculation history: {historyJson}.", JsonConvert.SerializeObject(calculationHistory));

@@ -55,7 +55,7 @@ namespace Service.IntrestManager.Engines
             _logger.LogInformation($"CalculatePaid started work with dateFrom: {dateFrom} and dateTo: {dateTo}");
             await using var ctx = _databaseContextFactory.Create();
             var calculationsForWeek =
-                ctx.GetInterestRateCalculationByDate(dateFrom, dateTo);
+                ctx.GetInterestRateCalculationByDateRange(dateFrom, dateTo);
             var paidCollection = new List<InterestRatePaid>();
             var currentDate = DateTime.UtcNow;
 

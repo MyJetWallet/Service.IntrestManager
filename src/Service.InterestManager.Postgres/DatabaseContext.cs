@@ -190,8 +190,15 @@ namespace Service.InterestManager.Postrges
                 .NoUpdate()
                 .RunAsync();
         }
+        
+        public List<InterestRateCalculation> GetInterestRateCalculationByDate(DateTime date)
+        {
+            return InterestRateCalculationCollection
+                .Where(e => e.Date == date)
+                .ToList();
+        }
 
-        public List<InterestRateCalculation> GetInterestRateCalculationByDate(DateTime dateFrom, DateTime dateTo)
+        public List<InterestRateCalculation> GetInterestRateCalculationByDateRange(DateTime dateFrom, DateTime dateTo)
         {
             return InterestRateCalculationCollection
                 .Where(e => e.Date >= dateFrom && e.Date < dateTo)
