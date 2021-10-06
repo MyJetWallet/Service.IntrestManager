@@ -11,7 +11,9 @@ namespace Service.IntrestManager.Client
         {
             var factory = new IntrestManagerClientFactory(grpcServiceUrl);
 
-            builder.RegisterInstance(factory.GetHelloService()).As<IInterestRateSettingsService>().SingleInstance();
+            builder.RegisterInstance(factory.GetInterestRateSettingsService()).As<IInterestRateSettingsService>().SingleInstance();
+            builder.RegisterInstance(factory.GetInterestManagerConfigService()).As<IInterestManagerConfigService>().SingleInstance();
+            builder.RegisterInstance(factory.GetInterestManagerService()).As<IInterestManagerService>().SingleInstance();
         }
     }
 }
