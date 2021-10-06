@@ -38,8 +38,12 @@ namespace Service.IntrestManager.Engines
             await using var ctx = _databaseContextFactory.Create();
             var lastPaid = ctx.GetLastPaid();
 
+            if (lastPaid == null)
+            {
+                return true;
+            }
             var paidExpected = DateTime.UtcNow.DayOfWeek == DayOfWeek.Monday &&
-                               lastPaid.Date.Date != DateTime.UtcNow.Date;
+                               lastPaid.CompletedDate.Date != DateTime.UtcNow.Date;
             return paidExpected;
         }
 

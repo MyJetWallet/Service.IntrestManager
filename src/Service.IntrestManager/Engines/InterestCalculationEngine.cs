@@ -33,7 +33,11 @@ namespace Service.IntrestManager.Engines
             await using var ctx = _databaseContextFactory.Create();
             var lastCalculation = ctx.GetLastCalculation();
 
-            var calculationExpected = lastCalculation.Date.Date != DateTime.UtcNow.Date;
+            if (lastCalculation == null)
+            {
+                return true;
+            }
+            var calculationExpected = lastCalculation.CompletedDate.Date != DateTime.UtcNow.Date;
             return calculationExpected;
         }
 

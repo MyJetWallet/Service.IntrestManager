@@ -154,13 +154,13 @@ namespace Service.InterestManager.Postrges
             await SaveChangesAsync();
         }
         
-        public InterestRateCalculation GetLastCalculation()
+        public CalculationHistory GetLastCalculation()
         {
-            return InterestRateCalculationCollection.OrderByDescending(e => e.Date).Take(1).FirstOrDefault();
+            return CalculationHistoryCollection.OrderByDescending(e => e.CompletedDate).Take(1).FirstOrDefault();
         }
-        public InterestRatePaid GetLastPaid()
+        public PaidHistory GetLastPaid()
         {
-            return InterestRatePaidCollection.OrderByDescending(e => e.Date).Take(1).FirstOrDefault();
+            return PaidHistoryCollection.OrderByDescending(e => e.CompletedDate).Take(1).FirstOrDefault();
         }
 
         public List<InterestRatePaid> GetNewPaidCollection()
