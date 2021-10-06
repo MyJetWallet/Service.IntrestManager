@@ -49,11 +49,12 @@ namespace Service.IntrestManager.Engines
 
         private async Task CalculatePaid()
         {
-            var dateFrom = DateTime.UtcNow.AddDays(-7);
+            await using var ctx = _databaseContextFactory.Create();
+            
+            var dateFrom = ctx.GetLastPaid().CompletedDate.AddMilliseconds(1);
             var dateTo = DateTime.UtcNow;
             
             _logger.LogInformation($"CalculatePaid started work with dateFrom: {dateFrom} and dateTo: {dateTo}");
-            await using var ctx = _databaseContextFactory.Create();
             var calculationsForWeek =
                 ctx.GetInterestRateCalculationByDateRange(dateFrom, dateTo);
             var paidCollection = new List<InterestRatePaid>();
