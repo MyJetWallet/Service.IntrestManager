@@ -70,8 +70,18 @@ namespace Service.IntrestManager.Engines
                 foreach (var interestRatePaid in paidToProcess)
                 {
                     var client = allClients?.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
+                    if (client == null)
+                    {
+                        _logger.LogError($"Cannot find client for wallet {interestRatePaid.WalletId}");
+                        continue;
+                    }
+
+                    if (interestRatePaid.Amount == 0)
+                    {
+                        _logger.LogInformation($"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol} with amount {interestRatePaid.Amount}");
+                        continue;
+                    }
                     var transactionId = Guid.NewGuid().ToString();
-                    
                     var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
                     {
                         TransactionId = transactionId,
