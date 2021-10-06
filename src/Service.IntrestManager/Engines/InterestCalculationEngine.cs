@@ -1,33 +1,26 @@
 using System;
 using System.Threading.Tasks;
-using Autofac;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MyJetWallet.Sdk.Service.Tools;
 using Newtonsoft.Json;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 
-namespace Service.IntrestManager.Jobs
+namespace Service.IntrestManager.Engines
 {
-    public class InterestCalculationJob : IStartable
+    public class InterestCalculationEngine
     {
-        private readonly ILogger<InterestCalculationJob> _logger;
-        private readonly MyTaskTimer _timer;
+        private readonly ILogger<InterestCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
 
-        public InterestCalculationJob(ILogger<InterestCalculationJob> logger, 
+        public InterestCalculationEngine(ILogger<InterestCalculationEngine> logger, 
             DatabaseContextFactory databaseContextFactory)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
-
-            _timer = new MyTaskTimer(nameof(InterestCalculationJob), 
-                TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
-            _logger.LogInformation($"InterestCalculationJob timer: {TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds)}");
         }
 
-        private async Task DoTime()
+        public async Task Execute()
         {
             if (await CalculationExpected())
             {
@@ -61,11 +54,6 @@ namespace Service.IntrestManager.Jobs
             };
             await ctx.SaveCalculationHistory(calculationHistory);
             _logger.LogInformation("Saved calculation history: {historyJson}.", JsonConvert.SerializeObject(calculationHistory));
-        }
-
-        public void Start()
-        {
-            _timer.Start();
         }
     }
 }

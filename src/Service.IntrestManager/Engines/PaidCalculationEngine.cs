@@ -2,37 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using Microsoft.Extensions.Logging;
-using MyJetWallet.Sdk.Service.Tools;
 using Newtonsoft.Json;
 using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 
-namespace Service.IntrestManager.Jobs
+namespace Service.IntrestManager.Engines
 {
-    public class PaidCalculationJob : IStartable
+    public class PaidCalculationEngine
     {
-        private readonly ILogger<PaidCalculationJob> _logger;
-        private readonly MyTaskTimer _timer;
+        private readonly ILogger<PaidCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly IIndexPricesClient _indexPricesClient;
 
-        public PaidCalculationJob(ILogger<PaidCalculationJob> logger, 
+        public PaidCalculationEngine(ILogger<PaidCalculationEngine> logger, 
             DatabaseContextFactory databaseContextFactory, 
             IIndexPricesClient indexPricesClient)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _indexPricesClient = indexPricesClient;
-
-            _timer = new MyTaskTimer(nameof(PaidCalculationJob), 
-                TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
-            _logger.LogInformation($"PaidCalculationJob timer: {TimeSpan.FromSeconds(Program.Settings.PaidCalculationTimerInSeconds)}");
         }
 
-        private async Task DoTime()
+        public async Task Execute()
         {
             if (await GedPaidExpectedState())
             {
@@ -107,11 +100,6 @@ namespace Service.IntrestManager.Jobs
             };
             await ctx.SavePaidHistory(paidHistory);
             _logger.LogInformation("Saved paid history: {historyJson}.", JsonConvert.SerializeObject(paidHistory));
-        }
-
-        public void Start()
-        {
-            _timer.Start();
         }
     }
 }

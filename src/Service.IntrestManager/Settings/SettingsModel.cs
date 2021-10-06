@@ -19,15 +19,9 @@ namespace Service.IntrestManager.Settings
 
         [YamlProperty("InterestManager.PostgresConnectionString")]
         public string PostgresConnectionString { get; set; }
-
-        [YamlProperty("InterestManager.InterestCalculationTimerInSeconds")]
-        public int InterestCalculationTimerInSeconds { get; set; }
         
-        [YamlProperty("InterestManager.PaidCalculationTimerInSeconds")]
-        public int PaidCalculationTimerInSeconds { get; set; }
-
-        [YamlProperty("InterestManager.InterestProcessingTimerInSeconds")]
-        public int InterestProcessingTimerInSeconds { get; set; }
+        [YamlProperty("InterestManager.InterestManagerTimerInSeconds")]
+        public int InterestManagerTimerInSeconds { get; set; }
 
         [YamlProperty("InterestManager.ChangeBalanceGatewayGrpcServiceUrl")]
         public string ChangeBalanceGatewayGrpcServiceUrl { get; set; }

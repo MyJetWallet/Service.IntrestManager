@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
-using MyJetWallet.Sdk.Service.Tools;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
 using Service.ClientWallets.Grpc;
@@ -14,19 +12,18 @@ using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Grpc;
 
-namespace Service.IntrestManager.Jobs
+namespace Service.IntrestManager.Engines
 {
-    public class InterestProcessingJob : IStartable
+    public class InterestProcessingEngine
     {
-        private readonly ILogger<InterestProcessingJob> _logger;
-        private readonly MyTaskTimer _timer;
+        private readonly ILogger<InterestProcessingEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
         private readonly IClientWalletService _clientWalletService;
         private readonly IInterestManagerConfigService _interestManagerConfigService;
         private readonly IPublisher<PaidInterestRateMessage> _publisher;
 
-        public InterestProcessingJob(ILogger<InterestProcessingJob> logger,
+        public InterestProcessingEngine(ILogger<InterestProcessingEngine> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
             IClientWalletService clientWalletService, 
@@ -39,13 +36,9 @@ namespace Service.IntrestManager.Jobs
             _clientWalletService = clientWalletService;
             _interestManagerConfigService = interestManagerConfigService;
             _publisher = publisher;
-
-            _timer = new MyTaskTimer(nameof(InterestProcessingJob), 
-                TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
-            _logger.LogInformation($"InterestProcessingJob timer: {TimeSpan.FromSeconds(Program.Settings.InterestProcessingTimerInSeconds)}");
         }
 
-        private async Task DoTime()
+        public async Task Execute()
         {
             await ProcessInterest();
         }
@@ -89,7 +82,7 @@ namespace Service.IntrestManager.Jobs
                         AssetSymbol = interestRatePaid.Symbol,
                         Comment = "Paid interest rate",
                         BrokerId = client?.BrokerId,
-                        RequestSource = nameof(InterestProcessingJob)
+                        RequestSource = nameof(InterestProcessingEngine)
                     });
 
                     if (processResponse.Result)
@@ -114,11 +107,6 @@ namespace Service.IntrestManager.Jobs
                 _logger.LogInformation($"InterestProcessingJob finish process {paidToProcess.Count} records.");
                 paidToProcess = ctx.GetNewPaidCollection() ?? new List<InterestRatePaid>();
             }
-        }
-
-        public void Start()
-        {
-            _timer.Start();
         }
     }
 }

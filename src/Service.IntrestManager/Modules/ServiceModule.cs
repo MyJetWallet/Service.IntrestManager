@@ -5,6 +5,7 @@ using MyJetWallet.Sdk.NoSql;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Engines;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Jobs;
 using Service.IntrestManager.Services;
@@ -26,25 +27,27 @@ namespace Service.IntrestManager.Modules
                 .RegisterType<InterestRateSettingsStorage>()
                 .As<IInterestRateSettingsStorage>()
                 .SingleInstance();
-
             builder
                 .RegisterType<InterestManagerConfigService>()
                 .As<IInterestManagerConfigService>();
 
             builder
-                .RegisterType<InterestCalculationJob>()
+                .RegisterType<InterestManagerJob>()
                 .As<IStartable>()
                 .AutoActivate()
                 .SingleInstance();
+            
             builder
-                .RegisterType<PaidCalculationJob>()
-                .As<IStartable>()
-                .AutoActivate()
+                .RegisterType<InterestCalculationEngine>()
+                .AsSelf()
                 .SingleInstance();
             builder
-                .RegisterType<InterestProcessingJob>()
-                .As<IStartable>()
-                .AutoActivate()
+                .RegisterType<PaidCalculationEngine>()
+                .AsSelf()
+                .SingleInstance();
+            builder
+                .RegisterType<InterestProcessingEngine>()
+                .AsSelf()
                 .SingleInstance();
         }
     }
