@@ -4,6 +4,7 @@ using Autofac;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
+using Newtonsoft.Json;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 
@@ -48,6 +49,18 @@ namespace Service.IntrestManager.Jobs
             await using var ctx = _databaseContextFactory.Create();
             ctx.Database.SetCommandTimeout(1200);
             await ctx.ExecCalculationAsync(DateTime.UtcNow, _logger);
+
+            await SaveCalculationHistory(ctx);
+        }
+
+        private async Task SaveCalculationHistory(DatabaseContext ctx)
+        {
+            var calculationHistory = new CalculationHistory()
+            {
+                CompletedDate = DateTime.UtcNow
+            };
+            await ctx.SaveCalculationHistory(calculationHistory);
+            _logger.LogInformation("Saved calculation history: {historyJson}.", JsonConvert.SerializeObject(calculationHistory));
         }
 
         public void Start()
