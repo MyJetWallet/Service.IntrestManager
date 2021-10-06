@@ -1,6 +1,8 @@
 using Autofac;
+using MyJetWallet.Sdk.NoSql;
 using Service.ChangeBalanceGateway.Client;
 using Service.ClientWallets.Client;
+using Service.IndexPrices.Client;
 
 namespace Service.IntrestManager.Modules
 {
@@ -8,8 +10,11 @@ namespace Service.IntrestManager.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
+            var myNoSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
+            
             builder.RegisterSpotChangeBalanceGatewayClient(Program.Settings.ChangeBalanceGatewayGrpcServiceUrl);
             builder.RegisterClientWalletsClientsWithoutCache(Program.Settings.ClientWalletsGrpcServiceUrl);
+            builder.RegisterIndexPricesClient(myNoSqlClient);
         }
     }
 }

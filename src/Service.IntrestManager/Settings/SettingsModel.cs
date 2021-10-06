@@ -37,5 +37,8 @@ namespace Service.IntrestManager.Settings
         
         [YamlProperty("InterestManager.SpotServiceBusHostPort")]
         public string SpotServiceBusHostPort { get; set; }
+
+        [YamlProperty("InterestManager.MyNoSqlReaderHostPort")]
+        public string MyNoSqlReaderHostPort { get; set; }
     }
 }

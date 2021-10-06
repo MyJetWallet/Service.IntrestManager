@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service.Tools;
+using Newtonsoft.Json;
+using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 
@@ -15,13 +17,16 @@ namespace Service.IntrestManager.Jobs
         private readonly ILogger<PaidCalculationJob> _logger;
         private readonly MyTaskTimer _timer;
         private readonly DatabaseContextFactory _databaseContextFactory;
+        private readonly IIndexPricesClient _indexPricesClient;
 
         public PaidCalculationJob(ILogger<PaidCalculationJob> logger, 
-            DatabaseContextFactory databaseContextFactory)
+            DatabaseContextFactory databaseContextFactory, 
+            IIndexPricesClient indexPricesClient)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
-            
+            _indexPricesClient = indexPricesClient;
+
             _timer = new MyTaskTimer(nameof(PaidCalculationJob), 
                 TimeSpan.FromSeconds(Program.Settings.InterestCalculationTimerInSeconds), _logger, DoTime);
             _logger.LogInformation($"PaidCalculationJob timer: {TimeSpan.FromSeconds(Program.Settings.PaidCalculationTimerInSeconds)}");
@@ -56,7 +61,9 @@ namespace Service.IntrestManager.Jobs
                 ctx.GetInterestRateCalculationByDate(dateFrom, dateTo);
             var paidCollection = new List<InterestRatePaid>();
             var currentDate = DateTime.UtcNow;
-            foreach (var walletId in calculationsForWeek.Select(e => e.WalletId).Distinct())
+
+            var wallets = calculationsForWeek.Select(e => e.WalletId).Distinct().ToList();
+            foreach (var walletId in wallets)
             {
                 var calculationsByWallet = calculationsForWeek.Where(e => e.WalletId == walletId).ToList();
                 foreach (var symbol in calculationsByWallet.Select(e => e.Symbol).Distinct())
@@ -73,7 +80,33 @@ namespace Service.IntrestManager.Jobs
                 }
             }
             await ctx.SavePaidCollection(paidCollection);
+
+            await SavePaidHistory(ctx, wallets.Count, paidCollection, dateFrom, dateTo);
+            
             _logger.LogInformation($"CalculatePaid finish work with dateFrom: {dateFrom} and dateTo: {dateTo}. Saved {paidCollection.Count} paid records.");
+        }
+
+        private async Task SavePaidHistory(DatabaseContext ctx, int walletsCount,
+            IReadOnlyCollection<InterestRatePaid> paidCollection, 
+            DateTime rangeFrom, DateTime rangeTo)
+        {
+            var totalAmount = 0m;
+            foreach (var symbol in paidCollection.Select(e => e.Symbol).Distinct())
+            {
+                var sumBySymbol = paidCollection.Where(e => e.Symbol == symbol).Sum(e => e.Amount);
+                var (_, usdVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, sumBySymbol);
+                totalAmount += usdVolume;
+            }
+            var paidHistory = new PaidHistory()
+            {
+                CompletedDate = DateTime.UtcNow,
+                RangeFrom = rangeFrom,
+                RangeTo = rangeTo,
+                WalletCount = walletsCount,
+                TotalPaidInUsd = totalAmount
+            };
+            await ctx.SavePaidHistory(paidHistory);
+            _logger.LogInformation("Saved paid history: {historyJson}.", JsonConvert.SerializeObject(paidHistory));
         }
 
         public void Start()
