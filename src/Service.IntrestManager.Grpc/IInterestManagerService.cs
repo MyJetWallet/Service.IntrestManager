@@ -6,6 +6,7 @@ using Service.IntrestManager.Domain.Models;
 
 namespace Service.IntrestManager.Grpc
 {
+    [ServiceContract]
     public interface IInterestManagerService
     {
         [OperationContract]
