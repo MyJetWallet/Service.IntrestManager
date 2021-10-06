@@ -9,6 +9,7 @@ using Service.IntrestManager.Engines;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Jobs;
 using Service.IntrestManager.Services;
+using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Modules
 {
