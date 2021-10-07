@@ -25,6 +25,16 @@ namespace Service.IntrestManager.Storage
             _logger = logger;
         }
 
+        private async Task SyncSettings()
+        {
+            await using var ctx = _contextFactory.Create();
+            var settings = ctx.GetSettings();
+            settings.ForEach(async e =>
+            {
+                await _interestRateWriter.InsertOrReplaceAsync(InterestRateSettingsNoSqlEntity.Create(e));
+            });
+        }
+
         public async Task<List<InterestRateSettings>> GetSettings()
         {
             try
