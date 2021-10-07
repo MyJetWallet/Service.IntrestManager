@@ -59,7 +59,7 @@ namespace Service.IntrestManager.Engines
 
         private async Task SaveCalculationHistory(DatabaseContext ctx, DateTime calculationDate)
         {
-            var calculations = ctx.GetInterestRateCalculationByDate(calculationDate);
+            var calculations = ctx.GetInterestRateCalculationByDate(calculationDate.Date);
             var walletCount = calculations.Select(e => e.WalletId).Distinct().Count();
 
             var amountInWalletsInUsd = 0m;
