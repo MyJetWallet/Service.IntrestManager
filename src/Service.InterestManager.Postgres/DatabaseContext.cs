@@ -20,9 +20,9 @@ namespace Service.InterestManager.Postrges
         private const string PaidHistoryTableName = "paidhistory";
         
         private DbSet<InterestRateSettings> InterestRateSettingsCollection { get; set; }
-        private DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
+        public DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
         private DbSet<InterestRatePaid> InterestRatePaidCollection { get; set; }
-        private DbSet<CalculationHistory> CalculationHistoryCollection { get; set; }
+        public DbSet<CalculationHistory> CalculationHistoryCollection { get; set; }
         private DbSet<PaidHistory> PaidHistoryCollection { get; set; }
         
         public DatabaseContext(DbContextOptions options) : base(options)
@@ -141,6 +141,60 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.Asset);
         }
+        
+        public List<InterestRatePaid> GetPaidByFilter(long lastId, int batchSize, string assetFilter,
+            string walletFilter, DateTime dateFilter)
+        {
+            IQueryable<InterestRatePaid> paid = InterestRatePaidCollection;
+            if (lastId != 0)
+            {
+                paid = paid.Where(e => e.Id < lastId);
+            }
+            if (!string.IsNullOrWhiteSpace(walletFilter))
+            {
+                paid = paid.Where(e => e.WalletId == walletFilter);
+            }
+            if (!string.IsNullOrWhiteSpace(assetFilter))
+            {
+                paid = paid.Where(e => e.Symbol == assetFilter);
+            }
+            if (dateFilter != DateTime.MinValue)
+            {
+                paid = paid.Where(e => e.Date == dateFilter);
+            }
+            paid = paid
+                .OrderByDescending(trade => trade.Id)
+                .Take(batchSize);
+            Console.WriteLine(paid.ToQueryString());
+            return paid.ToList();
+        }
+        
+        public List<InterestRateCalculation> GetCalculationByFilter(long lastId, int batchSize, string assetFilter,
+            string walletFilter, DateTime dateFilter)
+        {
+            IQueryable<InterestRateCalculation> calculations = InterestRateCalculationCollection;
+            if (lastId != 0)
+            {
+                calculations = calculations.Where(e => e.Id < lastId);
+            }
+            if (!string.IsNullOrWhiteSpace(walletFilter))
+            {
+                calculations = calculations.Where(e => e.WalletId == walletFilter);
+            }
+            if (!string.IsNullOrWhiteSpace(assetFilter))
+            {
+                calculations = calculations.Where(e => e.Symbol == assetFilter);
+            }
+            if (dateFilter != DateTime.MinValue)
+            {
+                calculations = calculations.Where(e => e.Date == dateFilter);
+            }
+            calculations = calculations
+                .OrderByDescending(trade => trade.Id)
+                .Take(batchSize);
+            Console.WriteLine(calculations.ToQueryString());
+            return calculations.ToList();
+        }
 
         public List<CalculationHistory> GetCalculationHistory()
         {
@@ -230,7 +284,6 @@ namespace Service.InterestManager.Postrges
                 await SaveChangesAsync();
             }
         }
-
         public async Task ExecCalculationAsync(DateTime date, ILogger logger)
         {
             try
