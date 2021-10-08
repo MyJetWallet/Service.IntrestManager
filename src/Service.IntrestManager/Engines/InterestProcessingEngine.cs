@@ -63,6 +63,8 @@ namespace Service.IntrestManager.Engines
             
             while (true)
             {
+                await Task.Delay(1);
+                
                 var serviceBusTaskList = new List<Task>();
                 var gatewayTaskList = new List<Task>();
                 iterationCount++;
@@ -109,9 +111,7 @@ namespace Service.IntrestManager.Engines
                         continue;
                     }
                     var transactionId = Guid.NewGuid().ToString();
-                    
-                    await Task.Delay(1);
-                    
+
                     gatewayTaskList.Add(PushToGateway(transactionId, client, fromWallet, interestRatePaid, serviceBusTaskList));
                 }
                 await Task.WhenAll(gatewayTaskList);
