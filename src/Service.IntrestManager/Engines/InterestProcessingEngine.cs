@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,8 +47,6 @@ namespace Service.IntrestManager.Engines
 
         private async Task ProcessInterest()
         {
-            await using var ctx = _databaseContextFactory.Create();
-            var paidToProcess = ctx.GetNewPaidCollection();
             var allClients = new List<ClientGrpc>();
             var fromWalletResponse = await _interestManagerConfigService.GetInterestManagerConfigAsync();
 
@@ -60,13 +59,28 @@ namespace Service.IntrestManager.Engines
             }
             var fromWallet = fromWalletResponse.Config.ServiceWallet;
 
-            if (paidToProcess.Any())
-            {
-                allClients = (await _clientWalletService.GetAllClientsAsync())?.Clients;
-            }
+            var iterationCount = 0;
             
-            while (paidToProcess.Any())
+            while (true)
             {
+                iterationCount++;
+                
+                var sv = new Stopwatch();
+                sv.Start();
+                
+                await using var ctx = _databaseContextFactory.Create();
+                var paidToProcess = ctx.GetNewPaidCollection();
+                
+                if (!paidToProcess.Any())
+                {
+                    break;
+                };
+                
+                if (!allClients.Any())
+                {
+                    allClients = (await _clientWalletService.GetAllClientsAsync())?.Clients ?? new List<ClientGrpc>();
+                }
+                
                 _logger.LogInformation("InterestProcessingJob find {paidCount} new records to process at {dateJson}.",
                     paidToProcess.Count, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
                 foreach (var interestRatePaid in paidToProcess)
@@ -75,12 +89,21 @@ namespace Service.IntrestManager.Engines
                     if (client == null)
                     {
                         _logger.LogError("Cannot find client for wallet {walletId}", interestRatePaid.WalletId);
+                        
+                        interestRatePaid.State = PaidState.Failed;
+                        interestRatePaid.ErrorMessage = string.Format("Cannot find client for wallet {walletId}", interestRatePaid.WalletId);
+                        
                         continue;
                     }
                     if (interestRatePaid.Amount == 0)
                     {
                         _logger.LogInformation("Skipped walletId: {walletid} and asset: {assetSymbol} with amount {amountJson}",
                             interestRatePaid.WalletId, interestRatePaid.Symbol, interestRatePaid.Amount);
+                        
+                        interestRatePaid.State = PaidState.Failed;
+                        interestRatePaid.ErrorMessage = string.Format("Skipped walletId: {walletid} and asset: {assetSymbol} with amount {amountJson}",
+                            interestRatePaid.WalletId, interestRatePaid.Symbol, interestRatePaid.Amount);
+                        
                         continue;
                     }
                     var transactionId = Guid.NewGuid().ToString();
@@ -117,8 +140,9 @@ namespace Service.IntrestManager.Engines
                     }
                 }
                 await ctx.SaveChangesAsync();
-                _logger.LogInformation("InterestProcessingJob finish process {paidCount} records.", paidToProcess.Count);
-                paidToProcess = ctx.GetNewPaidCollection() ?? new List<InterestRatePaid>();
+                sv.Stop();
+                _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
+                    iterationCount, paidToProcess.Count, sv.Elapsed.ToString());
             }
         }
     }
