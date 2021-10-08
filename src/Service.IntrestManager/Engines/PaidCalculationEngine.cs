@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Service;
 using Newtonsoft.Json;
 using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
@@ -27,6 +28,7 @@ namespace Service.IntrestManager.Engines
 
         public async Task Execute()
         {
+            using var activity = MyTelemetry.StartActivity(nameof(PaidCalculationEngine));
             if (await GedPaidExpectedState())
             {
                 await CalculatePaid();

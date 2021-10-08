@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Service;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
 using Service.ClientWallets.Grpc;
@@ -42,6 +43,7 @@ namespace Service.IntrestManager.Engines
 
         public async Task Execute()
         {
+            using var activity = MyTelemetry.StartActivity(nameof(InterestProcessingEngine));
             await ProcessInterest();
         }
 
@@ -68,6 +70,8 @@ namespace Service.IntrestManager.Engines
                 var serviceBusTaskList = new List<Task>();
                 var gatewayTaskList = new List<Task>();
                 iterationCount++;
+                
+                using var activity = MyTelemetry.StartActivity($"ProcessInterest iteration {iterationCount}");
                 
                 var sv = new Stopwatch();
                 sv.Start();

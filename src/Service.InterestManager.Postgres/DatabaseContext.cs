@@ -192,7 +192,9 @@ namespace Service.InterestManager.Postrges
             calculations = calculations
                 .OrderByDescending(trade => trade.Id)
                 .Take(batchSize);
+            
             Console.WriteLine(calculations.ToQueryString());
+            
             return calculations.ToList();
         }
 
