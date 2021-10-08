@@ -70,11 +70,11 @@ namespace Service.IntrestManager.Engines
             {
                 var calculationsBySymbol = calculations.Where(e => e.Symbol == symbol);
                 
-                var amountSum = calculationsBySymbol.Sum(e => e.Amount);
+                var amountSum = calculationsBySymbol.Sum(e => e.NewBalance);
                 var (_, usdAmountVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, amountSum);
                 amountInWalletsInUsd += usdAmountVolume;
                 
-                var apySum = calculationsBySymbol.Sum(e => e.Apy);
+                var apySum = calculationsBySymbol.Sum(e => e.Amount);
                 var (_, usdApyVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, apySum);
                 calculatedAmountInUsd += usdApyVolume;
             }
