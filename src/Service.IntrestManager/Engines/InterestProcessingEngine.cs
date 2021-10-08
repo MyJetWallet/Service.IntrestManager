@@ -63,6 +63,7 @@ namespace Service.IntrestManager.Engines
             
             while (true)
             {
+                var taskList = new List<Task>();
                 iterationCount++;
                 
                 var sv = new Stopwatch();
@@ -126,14 +127,14 @@ namespace Service.IntrestManager.Engines
                     if (processResponse.Result)
                     {
                         interestRatePaid.State = PaidState.Completed;
-                        await _publisher.PublishAsync(new PaidInterestRateMessage()
+                        taskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
                         {
                             TransactionId = transactionId,
                             WalletId = interestRatePaid.WalletId,
                             Symbol = interestRatePaid.Symbol,
                             Date = DateTime.UtcNow,
                             Amount = interestRatePaid.Amount
-                        });
+                        }).AsTask());
                     }
                     else
                     {
@@ -142,6 +143,7 @@ namespace Service.IntrestManager.Engines
                     }
                 }
                 await ctx.SaveChangesAsync();
+                await Task.WhenAll(taskList);
                 sv.Stop();
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
                     iterationCount, paidToProcess.Count, sv.Elapsed.ToString());
