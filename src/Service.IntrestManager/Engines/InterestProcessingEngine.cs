@@ -63,7 +63,8 @@ namespace Service.IntrestManager.Engines
             
             while (true)
             {
-                var taskList = new List<Task>();
+                var serviceBusTaskList = new List<Task>();
+                var gatewayTaskList = new List<Task>();
                 iterationCount++;
                 
                 var sv = new Stopwatch();
@@ -111,42 +112,53 @@ namespace Service.IntrestManager.Engines
                     
                     await Task.Delay(1);
                     
-                    var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
-                    {
-                        TransactionId = transactionId,
-                        ClientId = client?.ClientId,
-                        FromWalletId = fromWallet,
-                        ToWalletId = interestRatePaid.WalletId,
-                        Amount = (double) interestRatePaid.Amount,
-                        AssetSymbol = interestRatePaid.Symbol,
-                        Comment = "Paid interest rate",
-                        BrokerId = client?.BrokerId,
-                        RequestSource = nameof(InterestProcessingEngine)
-                    });
-
-                    if (processResponse.Result)
-                    {
-                        interestRatePaid.State = PaidState.Completed;
-                        taskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
-                        {
-                            TransactionId = transactionId,
-                            WalletId = interestRatePaid.WalletId,
-                            Symbol = interestRatePaid.Symbol,
-                            Date = DateTime.UtcNow,
-                            Amount = interestRatePaid.Amount
-                        }).AsTask());
-                    }
-                    else
-                    {
-                        interestRatePaid.State = PaidState.Failed;
-                        interestRatePaid.ErrorMessage = $"{processResponse.ErrorCode}: {processResponse.ErrorMessage}";
-                    }
+                    gatewayTaskList.Add(PushToGateway(transactionId, client, fromWallet, interestRatePaid, serviceBusTaskList));
                 }
+                await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
-                await Task.WhenAll(taskList);
+                await Task.WhenAll(serviceBusTaskList);
+
                 sv.Stop();
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
                     iterationCount, paidToProcess.Count, sv.Elapsed.ToString());
+            }
+        }
+
+        private async Task PushToGateway(string transactionId, ClientGrpc client, string fromWallet,
+            InterestRatePaid interestRatePaid, ICollection<Task> serviceBusTaskList)
+        {
+            var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
+            {
+                TransactionId = transactionId,
+                ClientId = client?.ClientId,
+                FromWalletId = fromWallet,
+                ToWalletId = interestRatePaid.WalletId,
+                Amount = (double) interestRatePaid.Amount,
+                AssetSymbol = interestRatePaid.Symbol,
+                Comment = "Paid interest rate",
+                BrokerId = client?.BrokerId,
+                RequestSource = nameof(InterestProcessingEngine)
+            });
+
+            if (processResponse.Result)
+            {
+                interestRatePaid.State = PaidState.Completed;
+                lock (serviceBusTaskList)
+                {
+                    serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
+                    {
+                        TransactionId = transactionId,
+                        WalletId = interestRatePaid.WalletId,
+                        Symbol = interestRatePaid.Symbol,
+                        Date = DateTime.UtcNow,
+                        Amount = interestRatePaid.Amount
+                    }).AsTask());
+                }
+            }
+            else
+            {
+                interestRatePaid.State = PaidState.Failed;
+                interestRatePaid.ErrorMessage = $"{processResponse.ErrorCode}: {processResponse.ErrorMessage}";
             }
         }
     }
