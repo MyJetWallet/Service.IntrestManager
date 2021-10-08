@@ -99,7 +99,7 @@ namespace Service.IntrestManager.Engines
 
                     if (processResponse.Result)
                     {
-                        await Task.Delay(10);
+                        await Task.Delay(1);
                         interestRatePaid.State = PaidState.Completed;
                         await _publisher.PublishAsync(new PaidInterestRateMessage()
                         {
