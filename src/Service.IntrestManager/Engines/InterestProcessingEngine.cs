@@ -93,7 +93,7 @@ namespace Service.IntrestManager.Engines
                         _logger.LogError("Cannot find client for wallet {walletId}", interestRatePaid.WalletId);
                         
                         interestRatePaid.State = PaidState.Failed;
-                        interestRatePaid.ErrorMessage = string.Format("Cannot find client for wallet {walletId}", interestRatePaid.WalletId);
+                        interestRatePaid.ErrorMessage = $"Cannot find client for wallet {interestRatePaid.WalletId}";
                         
                         continue;
                     }
@@ -103,8 +103,8 @@ namespace Service.IntrestManager.Engines
                             interestRatePaid.WalletId, interestRatePaid.Symbol, interestRatePaid.Amount);
                         
                         interestRatePaid.State = PaidState.Failed;
-                        interestRatePaid.ErrorMessage = string.Format("Skipped walletId: {walletid} and asset: {assetSymbol} with amount {amountJson}",
-                            interestRatePaid.WalletId, interestRatePaid.Symbol, interestRatePaid.Amount);
+                        interestRatePaid.ErrorMessage =
+                            $"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol} with amount {interestRatePaid.Amount}";
                         
                         continue;
                     }
