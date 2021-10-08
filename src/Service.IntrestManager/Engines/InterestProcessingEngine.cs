@@ -107,6 +107,9 @@ namespace Service.IntrestManager.Engines
                         continue;
                     }
                     var transactionId = Guid.NewGuid().ToString();
+                    
+                    await Task.Delay(1);
+                    
                     var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
                     {
                         TransactionId = transactionId,
@@ -122,7 +125,6 @@ namespace Service.IntrestManager.Engines
 
                     if (processResponse.Result)
                     {
-                        await Task.Delay(1);
                         interestRatePaid.State = PaidState.Completed;
                         await _publisher.PublishAsync(new PaidInterestRateMessage()
                         {
