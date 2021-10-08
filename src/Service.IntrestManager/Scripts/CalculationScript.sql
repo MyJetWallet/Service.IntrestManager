@@ -22,7 +22,7 @@ select "WalletId", "Symbol", "NewBalance" from
     (
         select *, ROW_NUMBER() OVER (PARTITION BY "WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
         from balancehistory.balance_history
-        where "Timestamp" < timestamp '${dateArg}'
+        where "Timestamp" <= timestamp '${dateArg}'
         order by "Timestamp" desc
     ) t where t.rank = 1;
 

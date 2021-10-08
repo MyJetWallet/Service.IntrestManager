@@ -53,7 +53,7 @@ namespace Service.IntrestManager.Engines
             await using var ctx = _databaseContextFactory.Create();
             ctx.Database.SetCommandTimeout(1200);
 
-            var calculationDate = DateTime.UtcNow.Date;
+            var calculationDate = DateTime.UtcNow.Date.AddSeconds(-1);
             await ctx.ExecCalculationAsync(calculationDate, _logger);
 
             await SaveCalculationHistory(ctx, calculationDate);
