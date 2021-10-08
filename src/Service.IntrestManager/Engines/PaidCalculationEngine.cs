@@ -58,7 +58,7 @@ namespace Service.IntrestManager.Engines
             var calculationsForWeek =
                 ctx.GetInterestRateCalculationByDateRange(dateFrom, dateTo);
             var paidCollection = new List<InterestRatePaid>();
-            var currentDate = DateTime.UtcNow;
+            var currentDate = DateTime.UtcNow.Date;
 
             var wallets = calculationsForWeek.Select(e => e.WalletId).Distinct().ToList();
             foreach (var walletId in wallets)
