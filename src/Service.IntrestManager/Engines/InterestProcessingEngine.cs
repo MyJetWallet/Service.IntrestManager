@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using DotNetCoreDecorators;
@@ -66,18 +67,20 @@ namespace Service.IntrestManager.Engines
             
             while (paidToProcess.Any())
             {
-                _logger.LogInformation($"InterestProcessingJob find {paidToProcess.Count} new records to process at {DateTime.UtcNow}.");
+                _logger.LogInformation("InterestProcessingJob find {paidCount} new records to process at {dateJson}.",
+                    paidToProcess.Count, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
                 foreach (var interestRatePaid in paidToProcess)
                 {
                     var client = allClients?.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
                     if (client == null)
                     {
-                        _logger.LogError($"Cannot find client for wallet {interestRatePaid.WalletId}");
+                        _logger.LogError("Cannot find client for wallet {walletId}", interestRatePaid.WalletId);
                         continue;
                     }
                     if (interestRatePaid.Amount == 0)
                     {
-                        _logger.LogInformation($"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol} with amount {interestRatePaid.Amount}");
+                        _logger.LogInformation("Skipped walletId: {walletid} and asset: {assetSymbol} with amount {amountJson}",
+                            interestRatePaid.WalletId, interestRatePaid.Symbol, interestRatePaid.Amount);
                         continue;
                     }
                     var transactionId = Guid.NewGuid().ToString();
@@ -96,6 +99,7 @@ namespace Service.IntrestManager.Engines
 
                     if (processResponse.Result)
                     {
+                        await Task.Delay(10);
                         interestRatePaid.State = PaidState.Completed;
                         await _publisher.PublishAsync(new PaidInterestRateMessage()
                         {
@@ -113,7 +117,7 @@ namespace Service.IntrestManager.Engines
                     }
                 }
                 await ctx.SaveChangesAsync();
-                _logger.LogInformation($"InterestProcessingJob finish process {paidToProcess.Count} records.");
+                _logger.LogInformation("InterestProcessingJob finish process {paidCount} records.", paidToProcess.Count);
                 paidToProcess = ctx.GetNewPaidCollection() ?? new List<InterestRatePaid>();
             }
         }
