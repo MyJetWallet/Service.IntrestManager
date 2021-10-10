@@ -99,7 +99,7 @@ namespace Service.IntrestManager.Engines
             }
             var paidHistory = new PaidHistory()
             {
-                CompletedDate = DateTime.UtcNow,
+                CompletedDate = InterestConstants.PaidExecutedDate,
                 RangeFrom = rangeFrom,
                 RangeTo = rangeTo,
                 WalletCount = walletsCount,
