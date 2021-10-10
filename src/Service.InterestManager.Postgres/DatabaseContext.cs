@@ -258,7 +258,7 @@ namespace Service.InterestManager.Postrges
         public List<InterestRateCalculation> GetInterestRateCalculationByDateRange(DateTime dateFrom, DateTime dateTo)
         {
             return InterestRateCalculationCollection
-                .Where(e => e.Date >= dateFrom && e.Date < dateTo)
+                .Where(e => e.Date >= dateFrom && e.Date <= dateTo)
                 .ToList();
         }
 

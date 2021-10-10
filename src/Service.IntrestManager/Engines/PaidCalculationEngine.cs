@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines
 {
@@ -54,13 +55,12 @@ namespace Service.IntrestManager.Engines
             await using var ctx = _databaseContextFactory.Create();
             
             var dateFrom = ctx.GetLastPaid()?.CompletedDate.AddMilliseconds(1) ?? DateTime.MinValue;
-            var dateTo = DateTime.UtcNow.Date;
+            var dateTo = InterestConstants.PaidPeriodToDate;
             
             _logger.LogInformation($"CalculatePaid started work with dateFrom: {dateFrom} and dateTo: {dateTo}");
             var calculationsForWeek =
                 ctx.GetInterestRateCalculationByDateRange(dateFrom, dateTo);
             var paidCollection = new List<InterestRatePaid>();
-            var currentDate = DateTime.UtcNow.Date;
 
             var wallets = calculationsForWeek.Select(e => e.WalletId).Distinct().ToList();
             foreach (var walletId in wallets)
@@ -72,7 +72,7 @@ namespace Service.IntrestManager.Engines
                     paidCollection.Add(new InterestRatePaid()
                     {
                         WalletId = walletId,
-                        Date = currentDate,
+                        Date = dateTo,
                         Symbol = symbol,
                         Amount = calculationsByWalletAndSymbol.Sum(e => e.Amount),
                         State = PaidState.New
