@@ -58,6 +58,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<CalculationHistory>().Property(e => e.Id).UseIdentityColumn();
             modelBuilder.Entity<CalculationHistory>().HasKey(e => e.Id);
             
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.CalculationDate);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.CompletedDate);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.WalletCount);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.AmountInWalletsInUsd);

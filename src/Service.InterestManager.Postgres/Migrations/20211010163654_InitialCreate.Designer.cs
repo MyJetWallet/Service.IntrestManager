@@ -10,8 +10,8 @@ using Service.InterestManager.Postrges;
 namespace Service.InterestManager.Postrges.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20211004172058_InitialCreate2")]
-    partial class InitialCreate2
+    [Migration("20211010163654_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,6 +21,35 @@ namespace Service.InterestManager.Postrges.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("ProductVersion", "5.0.10")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+            modelBuilder.Entity("Service.IntrestManager.Domain.Models.CalculationHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<decimal>("AmountInWalletsInUsd")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("CalculatedAmountInUsd")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("CalculationDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CompletedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("WalletCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletedDate");
+
+                    b.ToTable("calculationhistory");
+                });
 
             modelBuilder.Entity("Service.IntrestManager.Domain.Models.InterestRateCalculation", b =>
                 {
@@ -76,6 +105,12 @@ namespace Service.InterestManager.Postrges.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Symbol")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
@@ -85,6 +120,8 @@ namespace Service.InterestManager.Postrges.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("State");
 
                     b.HasIndex("Symbol");
 
@@ -134,6 +171,35 @@ namespace Service.InterestManager.Postrges.Migrations
                         .IsUnique();
 
                     b.ToTable("interestratesettings");
+                });
+
+            modelBuilder.Entity("Service.IntrestManager.Domain.Models.PaidHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<DateTime>("CompletedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("RangeFrom")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("RangeTo")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal>("TotalPaidInUsd")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("WalletCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletedDate");
+
+                    b.ToTable("paidhistory");
                 });
 #pragma warning restore 612, 618
         }

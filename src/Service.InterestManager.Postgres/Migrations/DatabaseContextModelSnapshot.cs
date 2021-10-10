@@ -33,6 +33,9 @@ namespace Service.InterestManager.Postrges.Migrations
                     b.Property<decimal>("CalculatedAmountInUsd")
                         .HasColumnType("numeric");
 
+                    b.Property<DateTime>("CalculationDate")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTime>("CompletedDate")
                         .HasColumnType("timestamp without time zone");
 

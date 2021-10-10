@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines
 {
@@ -53,15 +54,15 @@ namespace Service.IntrestManager.Engines
             await using var ctx = _databaseContextFactory.Create();
             ctx.Database.SetCommandTimeout(1200);
 
-            var calculationDate = DateTime.UtcNow.Date.AddSeconds(-1);
+            var calculationDate = InterestConstants.CalculationPeriodDate;
             await ctx.ExecCalculationAsync(calculationDate, _logger);
 
-            await SaveCalculationHistory(ctx, calculationDate);
+            await SaveCalculationHistory(ctx, calculationDate, InterestConstants.CalculationExecutedDate);
         }
 
-        private async Task SaveCalculationHistory(DatabaseContext ctx, DateTime calculationDate)
+        private async Task SaveCalculationHistory(DatabaseContext ctx, DateTime calculationDate, DateTime completedDate)
         {
-            var calculations = ctx.GetInterestRateCalculationByDate(calculationDate.Date);
+            var calculations = ctx.GetInterestRateCalculationByDate(calculationDate);
             var walletCount = calculations.Select(e => e.WalletId).Distinct().Count();
 
             var amountInWalletsInUsd = 0m;
@@ -81,7 +82,8 @@ namespace Service.IntrestManager.Engines
             
             var calculationHistory = new CalculationHistory()
             {
-                CompletedDate = calculationDate,
+                CalculationDate = calculationDate,
+                CompletedDate = completedDate,
                 WalletCount = walletCount,
                 AmountInWalletsInUsd = amountInWalletsInUsd,
                 CalculatedAmountInUsd = calculatedAmountInUsd
