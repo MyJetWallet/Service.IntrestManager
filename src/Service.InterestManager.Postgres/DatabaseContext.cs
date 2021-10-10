@@ -144,7 +144,7 @@ namespace Service.InterestManager.Postrges
         }
         
         public List<InterestRatePaid> GetPaidByFilter(long lastId, int batchSize, string assetFilter,
-            string walletFilter, DateTime dateFilter)
+            string walletFilter, DateTime dateFilter, PaidState stateFilter)
         {
             IQueryable<InterestRatePaid> paid = InterestRatePaidCollection;
             if (lastId != 0)
@@ -162,6 +162,10 @@ namespace Service.InterestManager.Postrges
             if (dateFilter != DateTime.MinValue)
             {
                 paid = paid.Where(e => e.Date == dateFilter);
+            }
+            if (stateFilter != PaidState.Undefined)
+            {
+                paid = paid.Where(e => e.State == stateFilter);
             }
             paid = paid
                 .OrderByDescending(trade => trade.Id)

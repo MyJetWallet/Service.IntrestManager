@@ -103,7 +103,7 @@ namespace Service.IntrestManager.Services
             {
                 await using var ctx = _databaseContextFactory.Create();
                 var paid = ctx.GetPaidByFilter(request.LastId,
-                    request.BatchSize, request.AssetFilter, request.WalletFilter, request.DateFilter);
+                    request.BatchSize, request.AssetFilter, request.WalletFilter, request.DateFilter, request.StateFilter);
                 
                 long idForNextQuery = 0;
                 if (paid.Any())

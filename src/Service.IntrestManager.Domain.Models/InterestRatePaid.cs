@@ -18,8 +18,9 @@ namespace Service.IntrestManager.Domain.Models
     [DataContract]
     public enum PaidState
     {
-        [DataMember(Order = 1)] New,
-        [DataMember(Order = 2)] Completed,
-        [DataMember(Order = 3)] Failed
+        [DataMember(Order = 1)] Undefined,
+        [DataMember(Order = 2)] New,
+        [DataMember(Order = 3)] Completed,
+        [DataMember(Order = 4)] Failed
     }
 }
