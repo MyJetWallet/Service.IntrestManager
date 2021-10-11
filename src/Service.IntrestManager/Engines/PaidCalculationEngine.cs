@@ -54,7 +54,7 @@ namespace Service.IntrestManager.Engines
         {
             await using var ctx = _databaseContextFactory.Create();
             
-            var dateFrom = ctx.GetLastPaid()?.CompletedDate.AddMilliseconds(1) ?? DateTime.MinValue;
+            var dateFrom = ctx.GetLastPaid()?.RangeTo.AddMilliseconds(1) ?? DateTime.MinValue;
             var dateTo = InterestConstants.PaidPeriodToDate;
             
             _logger.LogInformation($"CalculatePaid started work with dateFrom: {dateFrom} and dateTo: {dateTo}");
