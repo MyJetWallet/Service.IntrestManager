@@ -32,7 +32,8 @@ namespace Service.IntrestManager.Storage
 
             var noSqlSettings = settings.Select(InterestRateSettingsNoSqlEntity.Create).ToList();
 
-            await _interestRateWriter.CleanAndBulkInsertAsync(noSqlSettings);
+            await _interestRateWriter.CleanAndKeepMaxPartitions(0);
+            await _interestRateWriter.BulkInsertOrReplaceAsync(noSqlSettings);
         }
 
         public async Task<List<InterestRateSettings>> GetSettings()
