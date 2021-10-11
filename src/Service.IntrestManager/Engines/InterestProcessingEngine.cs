@@ -149,6 +149,8 @@ namespace Service.IntrestManager.Engines
                 {
                     serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
                     {
+                        BrokerId = client?.BrokerId,
+                        ClientId = client?.ClientId,
                         TransactionId = interestRatePaid.TransactionId,
                         WalletId = interestRatePaid.WalletId,
                         Symbol = interestRatePaid.Symbol,
