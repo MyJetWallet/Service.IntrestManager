@@ -29,21 +29,16 @@ namespace Service.IntrestManager.Storage
         {
             await using var ctx = _contextFactory.Create();
             var settings = ctx.GetSettings();
-            settings.ForEach(async e =>
-            {
-                await _interestRateWriter.InsertOrReplaceAsync(InterestRateSettingsNoSqlEntity.Create(e));
-            });
+
+            var noSqlSettings = settings.Select(InterestRateSettingsNoSqlEntity.Create).ToList();
+
+            await _interestRateWriter.CleanAndBulkInsertAsync(noSqlSettings);
         }
 
         public async Task<List<InterestRateSettings>> GetSettings()
         {
             try
             {
-                var rates = (await _interestRateWriter.GetAsync()).ToList();
-                if (rates.Any())
-                {
-                    return rates.Select(e => e.InterestRateSettings).ToList();
-                }
                 await using var ctx = _contextFactory.Create();
                 return ctx.GetSettings();
             }
@@ -60,9 +55,8 @@ namespace Service.IntrestManager.Storage
             {
                 await using var ctx = _contextFactory.Create();
                 await ctx.UpsertSettings(settings);
-            
-                var noSqlEntity = InterestRateSettingsNoSqlEntity.Create(settings);
-                await _interestRateWriter.InsertOrReplaceAsync(noSqlEntity);
+
+                await SyncSettings();
             }
             catch (Exception ex)
             {
@@ -76,9 +70,8 @@ namespace Service.IntrestManager.Storage
             {
                 await using var ctx = _contextFactory.Create();
                 await ctx.RemoveSettings(settings);
-                
-                await _interestRateWriter.DeleteAsync(InterestRateSettingsNoSqlEntity.GeneratePartitionKey(settings.WalletId, settings.Asset),
-                    InterestRateSettingsNoSqlEntity.GenerateRowKey(settings.RangeFrom, settings.RangeTo));
+
+                await SyncSettings();
             }
             catch (Exception ex)
             {
