@@ -10,7 +10,7 @@ using Service.InterestManager.Postrges;
 namespace Service.InterestManager.Postrges.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20211011061224_InitialCreate")]
+    [Migration("20211011093231_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -183,7 +183,7 @@ namespace Service.InterestManager.Postrges.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<DateTime>("CompletedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("RangeFrom")
@@ -200,7 +200,7 @@ namespace Service.InterestManager.Postrges.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompletedDate");
+                    b.HasIndex("CreatedDate");
 
                     b.ToTable("paidhistory");
                 });

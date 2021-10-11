@@ -127,5 +127,28 @@ namespace Service.IntrestManager.Services
                 };
             }
         }
+
+        public async Task<RetryPaidByCreatedDateResponse> RetryPaidByCreatedDateAsync(RetryPaidByCreatedDateRequest request)
+        {
+            try
+            {
+                await using var ctx = _databaseContextFactory.Create();
+                await ctx.RetryPaidPeriod(request.CreatedDate);
+
+                return new RetryPaidByCreatedDateResponse()
+                {
+                    Success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new RetryPaidByCreatedDateResponse()
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
     }
 }

@@ -93,7 +93,7 @@ namespace Service.InterestManager.Postrges.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CompletedDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     RangeFrom = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     RangeTo = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     WalletCount = table.Column<int>(type: "integer", nullable: false),
@@ -192,10 +192,10 @@ namespace Service.InterestManager.Postrges.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_paidhistory_CompletedDate",
+                name: "IX_paidhistory_CreatedDate",
                 schema: "interest_manager",
                 table: "paidhistory",
-                column: "CompletedDate");
+                column: "CreatedDate");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

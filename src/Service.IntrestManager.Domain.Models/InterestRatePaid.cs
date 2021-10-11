@@ -22,6 +22,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 1)] Undefined,
         [DataMember(Order = 2)] New,
         [DataMember(Order = 3)] Completed,
-        [DataMember(Order = 4)] Failed
+        [DataMember(Order = 4)] Failed,
+        [DataMember(Order = 5)] Retry,
     }
 }

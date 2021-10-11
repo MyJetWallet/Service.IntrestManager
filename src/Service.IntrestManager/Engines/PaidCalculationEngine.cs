@@ -46,7 +46,7 @@ namespace Service.IntrestManager.Engines
                 return true;
             }
             var paidExpected = DateTime.UtcNow.DayOfWeek == DayOfWeek.Monday &&
-                               lastPaid.CompletedDate.Date != DateTime.UtcNow.Date;
+                               lastPaid.CreatedDate.Date != DateTime.UtcNow.Date;
             return paidExpected;
         }
 
@@ -61,7 +61,8 @@ namespace Service.IntrestManager.Engines
             var calculationsForWeek =
                 ctx.GetInterestRateCalculationByDateRange(dateFrom, dateTo);
             var paidCollection = new List<InterestRatePaid>();
-
+            var createdDate = InterestConstants.PaidCreatedDate;
+            
             var wallets = calculationsForWeek.Select(e => e.WalletId).Distinct().ToList();
             foreach (var walletId in wallets)
             {
@@ -73,7 +74,7 @@ namespace Service.IntrestManager.Engines
                     {
                         TransactionId = Guid.NewGuid().ToString("N"),
                         WalletId = walletId,
-                        Date = dateTo,
+                        Date = createdDate,
                         Symbol = symbol,
                         Amount = calculationsByWalletAndSymbol.Sum(e => e.Amount),
                         State = PaidState.New
@@ -82,14 +83,14 @@ namespace Service.IntrestManager.Engines
             }
             await ctx.SavePaidCollection(paidCollection);
 
-            await SavePaidHistory(ctx, wallets.Count, paidCollection, dateFrom, dateTo);
+            await SavePaidHistory(ctx, wallets.Count, paidCollection, dateFrom, dateTo, createdDate);
             
             _logger.LogInformation($"CalculatePaid finish work with dateFrom: {dateFrom} and dateTo: {dateTo}. Saved {paidCollection.Count} paid records.");
         }
 
         private async Task SavePaidHistory(DatabaseContext ctx, int walletsCount,
             IReadOnlyCollection<InterestRatePaid> paidCollection, 
-            DateTime rangeFrom, DateTime rangeTo)
+            DateTime rangeFrom, DateTime rangeTo, DateTime createdDate)
         {
             var totalAmount = 0m;
             foreach (var symbol in paidCollection.Select(e => e.Symbol).Distinct())
@@ -100,7 +101,7 @@ namespace Service.IntrestManager.Engines
             }
             var paidHistory = new PaidHistory()
             {
-                CompletedDate = InterestConstants.PaidExecutedDate,
+                CreatedDate = createdDate,
                 RangeFrom = rangeFrom,
                 RangeTo = rangeTo,
                 WalletCount = walletsCount,

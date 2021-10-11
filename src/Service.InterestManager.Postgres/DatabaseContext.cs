@@ -74,13 +74,13 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<PaidHistory>().Property(e => e.Id).UseIdentityColumn();
             modelBuilder.Entity<PaidHistory>().HasKey(e => e.Id);
             
-            modelBuilder.Entity<PaidHistory>().Property(e => e.CompletedDate);
+            modelBuilder.Entity<PaidHistory>().Property(e => e.CreatedDate);
             modelBuilder.Entity<PaidHistory>().Property(e => e.RangeFrom);
             modelBuilder.Entity<PaidHistory>().Property(e => e.RangeTo);
             modelBuilder.Entity<PaidHistory>().Property(e => e.WalletCount);
             modelBuilder.Entity<PaidHistory>().Property(e => e.TotalPaidInUsd);
             
-            modelBuilder.Entity<PaidHistory>().HasIndex(e => e.CompletedDate);
+            modelBuilder.Entity<PaidHistory>().HasIndex(e => e.CreatedDate);
         }
 
         private void SetInterestRatePaidEntity(ModelBuilder modelBuilder)
@@ -232,7 +232,7 @@ namespace Service.InterestManager.Postrges
         }
         public PaidHistory GetLastPaid()
         {
-            return PaidHistoryCollection.OrderByDescending(e => e.CompletedDate).Take(1).FirstOrDefault();
+            return PaidHistoryCollection.OrderByDescending(e => e.CreatedDate).Take(1).FirstOrDefault();
         }
 
         public List<InterestRatePaid> GetNewPaidCollection()
@@ -311,6 +311,14 @@ namespace Service.InterestManager.Postrges
             {
                 logger.LogError(ex, ex.Message);
             }
+        }
+
+        public async Task RetryPaidPeriod(DateTime createdDate)
+        {
+            await InterestRatePaidCollection
+                .Where(e => e.Date == createdDate && e.State == PaidState.Failed)
+                .ForEachAsync(e => e.State = PaidState.Retry);
+            await SaveChangesAsync();
         }
     }
 }

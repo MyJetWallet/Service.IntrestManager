@@ -181,7 +181,7 @@ namespace Service.InterestManager.Postrges.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<DateTime>("CompletedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("RangeFrom")
@@ -198,7 +198,7 @@ namespace Service.InterestManager.Postrges.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompletedDate");
+                    b.HasIndex("CreatedDate");
 
                     b.ToTable("paidhistory");
                 });

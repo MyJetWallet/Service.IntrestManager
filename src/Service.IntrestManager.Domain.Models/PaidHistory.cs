@@ -7,7 +7,7 @@ namespace Service.IntrestManager.Domain.Models
     public class PaidHistory
     {
         [DataMember(Order = 1)] public long Id { get; set; }
-        [DataMember(Order = 2)] public DateTime CompletedDate { get; set; }
+        [DataMember(Order = 2)] public DateTime CreatedDate { get; set; }
         [DataMember(Order = 3)] public DateTime RangeFrom { get; set; }
         [DataMember(Order = 4)] public DateTime RangeTo { get; set; }
         [DataMember(Order = 5)] public int WalletCount { get; set; }
