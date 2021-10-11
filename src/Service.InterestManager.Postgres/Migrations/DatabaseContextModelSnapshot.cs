@@ -113,6 +113,9 @@ namespace Service.InterestManager.Postrges.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("text");
+
                     b.Property<string>("WalletId")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");

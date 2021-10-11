@@ -114,9 +114,7 @@ namespace Service.IntrestManager.Engines
                         
                         continue;
                     }
-                    var transactionId = Guid.NewGuid().ToString();
-
-                    gatewayTaskList.Add(PushToGateway(transactionId, client, fromWallet, interestRatePaid, serviceBusTaskList));
+                    gatewayTaskList.Add(PushToGateway( client, fromWallet, interestRatePaid, serviceBusTaskList));
                 }
                 await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
@@ -128,12 +126,12 @@ namespace Service.IntrestManager.Engines
             }
         }
 
-        private async Task PushToGateway(string transactionId, ClientGrpc client, string fromWallet,
+        private async Task PushToGateway(ClientGrpc client, string fromWallet,
             InterestRatePaid interestRatePaid, ICollection<Task> serviceBusTaskList)
         {
             var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
             {
-                TransactionId = transactionId,
+                TransactionId = interestRatePaid.TransactionId,
                 ClientId = client?.ClientId,
                 FromWalletId = fromWallet,
                 ToWalletId = interestRatePaid.WalletId,
@@ -151,7 +149,7 @@ namespace Service.IntrestManager.Engines
                 {
                     serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
                     {
-                        TransactionId = transactionId,
+                        TransactionId = interestRatePaid.TransactionId,
                         WalletId = interestRatePaid.WalletId,
                         Symbol = interestRatePaid.Symbol,
                         Date = DateTime.UtcNow,

@@ -60,7 +60,8 @@ namespace Service.InterestManager.Postrges.Migrations
                     Date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric", nullable: false),
                     State = table.Column<int>(type: "integer", nullable: false),
-                    ErrorMessage = table.Column<string>(type: "text", nullable: true)
+                    ErrorMessage = table.Column<string>(type: "text", nullable: true),
+                    TransactionId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {

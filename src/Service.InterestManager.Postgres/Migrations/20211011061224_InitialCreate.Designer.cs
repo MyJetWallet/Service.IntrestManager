@@ -10,7 +10,7 @@ using Service.InterestManager.Postrges;
 namespace Service.InterestManager.Postrges.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20211010163654_InitialCreate")]
+    [Migration("20211011061224_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -114,6 +114,9 @@ namespace Service.InterestManager.Postrges.Migrations
                     b.Property<string>("Symbol")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("text");
 
                     b.Property<string>("WalletId")
                         .HasMaxLength(64)

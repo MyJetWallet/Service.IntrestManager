@@ -71,6 +71,7 @@ namespace Service.IntrestManager.Engines
                     var calculationsByWalletAndSymbol = calculationsByWallet.Where(e => e.Symbol == symbol);
                     paidCollection.Add(new InterestRatePaid()
                     {
+                        TransactionId = Guid.NewGuid().ToString("N"),
                         WalletId = walletId,
                         Date = dateTo,
                         Symbol = symbol,
