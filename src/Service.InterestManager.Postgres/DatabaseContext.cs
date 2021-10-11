@@ -273,10 +273,27 @@ namespace Service.InterestManager.Postrges
         }
         public async Task UpsertSettings(InterestRateSettings settings)
         {
-            await InterestRateSettingsCollection
-                .Upsert(settings)
-                .On(e => e.Id)
-                .RunAsync();
+            if (settings.Id == 0)
+            {
+                InterestRateSettingsCollection.Add(settings);
+            }
+            else
+            {
+                var entity = InterestRateSettingsCollection.FirstOrDefault(e => e.Id == settings.Id);
+                if (entity == null)
+                {
+                    InterestRateSettingsCollection.Add(settings);
+                }
+                else
+                {
+                    entity.WalletId = settings.WalletId;
+                    entity.Asset = settings.Asset;
+                    entity.RangeFrom = settings.RangeFrom;
+                    entity.RangeTo = settings.RangeTo;
+                    entity.Apy = settings.Apy;
+                }
+            }
+            await SaveChangesAsync();
         }
         public async Task RemoveSettings(InterestRateSettings settings)
         {
