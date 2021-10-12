@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
 using Service.InterestManager.Postrges;
@@ -22,18 +23,21 @@ namespace Service.IntrestManager.Engines
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
         private readonly IInterestManagerConfigService _interestManagerConfigService;
         private readonly IPublisher<PaidInterestRateMessage> _publisher;
+        private readonly IAssetsDictionaryClient _assetsClient;
 
         public InterestProcessingEngine(ILogger<InterestProcessingEngine> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
             IInterestManagerConfigService interestManagerConfigService, 
-            IPublisher<PaidInterestRateMessage> publisher)
+            IPublisher<PaidInterestRateMessage> publisher, 
+            IAssetsDictionaryClient assetsClient)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _spotChangeBalanceService = spotChangeBalanceService;
             _interestManagerConfigService = interestManagerConfigService;
             _publisher = publisher;
+            _assetsClient = assetsClient;
         }
 
         public async Task Execute()
@@ -52,12 +56,14 @@ namespace Service.IntrestManager.Engines
                 string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceClient) ||
                 string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceWallet))
             {
-                _logger.LogError("Cannot process interest. Service wallet IS EMPTY !!!!");
+                _logger.LogError("Cannot process interest. Service config IS EMPTY !!!!");
                 return;
             }
 
             var iterationCount = 0;
 
+            var assets = _assetsClient.GetAllAssets();
+            
             while (true)
             {
                 await Task.Delay(1);
@@ -92,10 +98,20 @@ namespace Service.IntrestManager.Engines
                         interestRatePaid.State = PaidState.Failed;
                         interestRatePaid.ErrorMessage =
                             $"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol} with amount {interestRatePaid.Amount}";
-                        
                         continue;
                     }
-                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, serviceBusTaskList));
+                    var asset = assets.FirstOrDefault(e => e.Symbol == interestRatePaid.Symbol);
+                    if (asset == null)
+                    {
+                        _logger.LogInformation("Skipped walletId: {walletId} and asset: {asset}. Cannot find asset in asset dictionary.",
+                            interestRatePaid.WalletId, interestRatePaid.Symbol);
+                        
+                        interestRatePaid.State = PaidState.Failed;
+                        interestRatePaid.ErrorMessage =
+                            $"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol}. Cannot find asset in asset dictionary.";
+                        continue;
+                    }
+                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, serviceBusTaskList, asset.Accuracy));
                 }
                 await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
@@ -108,15 +124,26 @@ namespace Service.IntrestManager.Engines
         }
 
         private async Task PushToGateway(InterestManagerConfig serviceConfig,
-            InterestRatePaid interestRatePaid, ICollection<Task> serviceBusTaskList)
+            InterestRatePaid interestRatePaid, ICollection<Task> serviceBusTaskList, int accuracy)
         {
+            var roundedAmount = Math.Round(interestRatePaid.Amount, accuracy, MidpointRounding.ToZero);
+            if (roundedAmount == 0m)
+            {
+                _logger.LogInformation("Skipped walletId: {walletId} and asset: {asset}. Amount {amount} is too low.",
+                    interestRatePaid.WalletId, interestRatePaid.Symbol, interestRatePaid.Amount);
+                
+                interestRatePaid.State = PaidState.TooLowAmount;
+                interestRatePaid.ErrorMessage = $"Amount {interestRatePaid.Amount} for asset {interestRatePaid.Symbol} and wallet {interestRatePaid.WalletId} is too low.";
+                return;
+            }
+            
             var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
             {
                 TransactionId = interestRatePaid.TransactionId,
                 ClientId = serviceConfig.ServiceClient,
                 FromWalletId = serviceConfig.ServiceWallet,
                 ToWalletId = interestRatePaid.WalletId,
-                Amount = (double) interestRatePaid.Amount,
+                Amount = (double) roundedAmount,
                 AssetSymbol = interestRatePaid.Symbol,
                 Comment = "Paid interest rate",
                 BrokerId = serviceConfig.ServiceBroker,
@@ -126,6 +153,7 @@ namespace Service.IntrestManager.Engines
             if (processResponse.Result)
             {
                 interestRatePaid.State = PaidState.Completed;
+                interestRatePaid.Amount = roundedAmount;
                 lock (serviceBusTaskList)
                 {
                     serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
@@ -136,7 +164,7 @@ namespace Service.IntrestManager.Engines
                         WalletId = interestRatePaid.WalletId,
                         Symbol = interestRatePaid.Symbol,
                         Date = DateTime.UtcNow,
-                        Amount = interestRatePaid.Amount
+                        Amount = roundedAmount
                     }).AsTask());
                 }
             }

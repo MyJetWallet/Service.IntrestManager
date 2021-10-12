@@ -1,5 +1,6 @@
 using Autofac;
 using MyJetWallet.Sdk.NoSql;
+using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Client;
 using Service.ClientWallets.Client;
 using Service.IndexPrices.Client;
@@ -14,6 +15,7 @@ namespace Service.IntrestManager.Modules
             
             builder.RegisterSpotChangeBalanceGatewayClient(Program.Settings.ChangeBalanceGatewayGrpcServiceUrl);
             builder.RegisterIndexPricesClient(myNoSqlClient);
+            builder.RegisterAssetsDictionaryClients(myNoSqlClient);
         }
     }
 }

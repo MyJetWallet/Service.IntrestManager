@@ -24,5 +24,6 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 3)] Completed,
         [DataMember(Order = 4)] Failed,
         [DataMember(Order = 5)] Retry,
+        [DataMember(Order = 6)] TooLowAmount,
     }
 }
