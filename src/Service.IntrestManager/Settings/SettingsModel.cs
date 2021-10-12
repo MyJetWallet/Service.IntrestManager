@@ -26,9 +26,6 @@ namespace Service.IntrestManager.Settings
         [YamlProperty("InterestManager.ChangeBalanceGatewayGrpcServiceUrl")]
         public string ChangeBalanceGatewayGrpcServiceUrl { get; set; }
 
-        [YamlProperty("InterestManager.ClientWalletsGrpcServiceUrl")]
-        public string ClientWalletsGrpcServiceUrl { get; set; }
-        
         [YamlProperty("InterestManager.SpotServiceBusHostPort")]
         public string SpotServiceBusHostPort { get; set; }
 

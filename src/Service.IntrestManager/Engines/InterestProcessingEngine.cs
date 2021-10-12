@@ -9,8 +9,6 @@ using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
-using Service.ClientWallets.Grpc;
-using Service.ClientWallets.Grpc.Models;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Grpc;
@@ -22,21 +20,18 @@ namespace Service.IntrestManager.Engines
         private readonly ILogger<InterestProcessingEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
-        private readonly IClientWalletService _clientWalletService;
         private readonly IInterestManagerConfigService _interestManagerConfigService;
         private readonly IPublisher<PaidInterestRateMessage> _publisher;
 
         public InterestProcessingEngine(ILogger<InterestProcessingEngine> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
-            IClientWalletService clientWalletService, 
             IInterestManagerConfigService interestManagerConfigService, 
             IPublisher<PaidInterestRateMessage> publisher)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _spotChangeBalanceService = spotChangeBalanceService;
-            _clientWalletService = clientWalletService;
             _interestManagerConfigService = interestManagerConfigService;
             _publisher = publisher;
         }
@@ -49,20 +44,20 @@ namespace Service.IntrestManager.Engines
 
         private async Task ProcessInterest()
         {
-            var allClients = new List<ClientGrpc>();
-            var fromWalletResponse = await _interestManagerConfigService.GetInterestManagerConfigAsync();
+            var serviceConfig = await _interestManagerConfigService.GetInterestManagerConfigAsync();
 
-            if (!fromWalletResponse.Success ||
-                fromWalletResponse.Config == null ||
-                string.IsNullOrWhiteSpace(fromWalletResponse.Config.ServiceWallet))
+            if (!serviceConfig.Success ||
+                serviceConfig.Config == null ||
+                string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceBroker) ||
+                string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceClient) ||
+                string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceWallet))
             {
                 _logger.LogError("Cannot process interest. Service wallet IS EMPTY !!!!");
                 return;
             }
-            var fromWallet = fromWalletResponse.Config.ServiceWallet;
 
             var iterationCount = 0;
-            
+
             while (true)
             {
                 await Task.Delay(1);
@@ -83,26 +78,12 @@ namespace Service.IntrestManager.Engines
                 {
                     break;
                 };
-                
-                if (!allClients.Any())
-                {
-                    allClients = (await _clientWalletService.GetAllClientsAsync())?.Clients ?? new List<ClientGrpc>();
-                }
-                
+
                 _logger.LogInformation("InterestProcessingJob find {paidCount} new records to process at {dateJson}.",
                     paidToProcess.Count, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+
                 foreach (var interestRatePaid in paidToProcess)
                 {
-                    var client = allClients?.FirstOrDefault(e => e.Wallets.Contains(interestRatePaid.WalletId));
-                    if (client == null)
-                    {
-                        _logger.LogError("Cannot find client for wallet {walletId}", interestRatePaid.WalletId);
-                        
-                        interestRatePaid.State = PaidState.Failed;
-                        interestRatePaid.ErrorMessage = $"Cannot find client for wallet {interestRatePaid.WalletId}";
-                        
-                        continue;
-                    }
                     if (interestRatePaid.Amount == 0)
                     {
                         _logger.LogInformation("Skipped walletId: {walletid} and asset: {assetSymbol} with amount {amountJson}",
@@ -114,7 +95,7 @@ namespace Service.IntrestManager.Engines
                         
                         continue;
                     }
-                    gatewayTaskList.Add(PushToGateway( client, fromWallet, interestRatePaid, serviceBusTaskList));
+                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, serviceBusTaskList));
                 }
                 await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
@@ -126,19 +107,19 @@ namespace Service.IntrestManager.Engines
             }
         }
 
-        private async Task PushToGateway(ClientGrpc client, string fromWallet,
+        private async Task PushToGateway(InterestManagerConfig serviceConfig,
             InterestRatePaid interestRatePaid, ICollection<Task> serviceBusTaskList)
         {
             var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
             {
                 TransactionId = interestRatePaid.TransactionId,
-                ClientId = client?.ClientId,
-                FromWalletId = fromWallet,
+                ClientId = serviceConfig.ServiceClient,
+                FromWalletId = serviceConfig.ServiceWallet,
                 ToWalletId = interestRatePaid.WalletId,
                 Amount = (double) interestRatePaid.Amount,
                 AssetSymbol = interestRatePaid.Symbol,
                 Comment = "Paid interest rate",
-                BrokerId = client?.BrokerId,
+                BrokerId = serviceConfig.ServiceBroker,
                 RequestSource = nameof(InterestProcessingEngine)
             });
 
@@ -149,8 +130,8 @@ namespace Service.IntrestManager.Engines
                 {
                     serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
                     {
-                        BrokerId = client?.BrokerId,
-                        ClientId = client?.ClientId,
+                        BrokerId = serviceConfig.ServiceBroker,
+                        ClientId = serviceConfig.ServiceClient,
                         TransactionId = interestRatePaid.TransactionId,
                         WalletId = interestRatePaid.WalletId,
                         Symbol = interestRatePaid.Symbol,
