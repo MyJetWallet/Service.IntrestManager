@@ -317,7 +317,8 @@ namespace Service.InterestManager.Postrges
                 using var script =
                     new StreamReader(path);
                 var scriptBody = await script.ReadToEndAsync();
-                var dateArg = $"{date.Year}-{date.Month.ToString().PadLeft(2, '0')}-{date.Day.ToString().PadLeft(2, '0')}";
+                var dateArg = $"{date.Year}-{date.Month.ToString().PadLeft(2, '0')}-{date.Day.ToString().PadLeft(2, '0')}" +
+                              $" {date.Hour.ToString().PadLeft(2, '0')}:{date.Minute.ToString().PadLeft(2, '0')}:{date.Second.ToString().PadLeft(2, '0')}";
                 var sqlText = scriptBody.Replace("${dateArg}", dateArg);
 
                 logger.LogInformation($"ExecCalculationAsync start with date {dateArg}");
