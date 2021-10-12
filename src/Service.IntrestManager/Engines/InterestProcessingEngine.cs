@@ -78,7 +78,7 @@ namespace Service.IntrestManager.Engines
                 sv.Start();
                 
                 await using var ctx = _databaseContextFactory.Create();
-                var paidToProcess = ctx.GetNewPaidCollection();
+                var paidToProcess = ctx.GetTop100PaidToProcess();
                 
                 if (!paidToProcess.Any())
                 {

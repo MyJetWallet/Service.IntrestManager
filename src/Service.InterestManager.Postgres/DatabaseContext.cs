@@ -235,10 +235,11 @@ namespace Service.InterestManager.Postrges
             return PaidHistoryCollection.OrderByDescending(e => e.CreatedDate).Take(1).FirstOrDefault();
         }
 
-        public List<InterestRatePaid> GetNewPaidCollection()
+        public List<InterestRatePaid> GetTop100PaidToProcess()
         {
             return InterestRatePaidCollection
-                .Where(e => e.State == PaidState.New)
+                .Where(e => e.State == PaidState.New || 
+                            e.State == PaidState.Retry)
                 .OrderBy(e => e.Date)
                 .Take(100)
                 .ToList();

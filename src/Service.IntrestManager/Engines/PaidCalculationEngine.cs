@@ -70,13 +70,18 @@ namespace Service.IntrestManager.Engines
                 foreach (var symbol in calculationsByWallet.Select(e => e.Symbol).Distinct())
                 {
                     var calculationsByWalletAndSymbol = calculationsByWallet.Where(e => e.Symbol == symbol);
+
+                    var amount = calculationsByWalletAndSymbol.Sum(e => e.Amount);
+                    if (amount == 0)
+                        continue;
+                    
                     paidCollection.Add(new InterestRatePaid()
                     {
                         TransactionId = Guid.NewGuid().ToString("N"),
                         WalletId = walletId,
                         Date = createdDate,
                         Symbol = symbol,
-                        Amount = calculationsByWalletAndSymbol.Sum(e => e.Amount),
+                        Amount = amount,
                         State = PaidState.New
                     });
                 }
