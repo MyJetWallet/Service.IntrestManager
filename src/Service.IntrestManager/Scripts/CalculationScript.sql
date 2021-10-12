@@ -24,7 +24,9 @@ select "WalletId", "Symbol", "NewBalance" from
         from balancehistory.balance_history
         where "Timestamp" <= timestamp '${dateArg}'
         order by "Timestamp" desc
-    ) t where t.rank = 1 && t."NewBalance" > 0;
+    ) t 
+where t.rank = 1 
+    and t."NewBalance" > 0;
 
 -- stage 1
 insert into temp_calculation
