@@ -42,7 +42,7 @@ select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp 
 from temp_new_balances hd
 join interest_manager.interestratesettings s
     on hd."walletid" = s."WalletId"
-        and s."Asset" = ''
+        and (s."Asset" = '' OR s."Asset" IS NULL)
         and s."RangeFrom" = 0
         and s."RangeTo" = 0
 left join temp_calculation tc
@@ -55,7 +55,7 @@ insert into temp_calculation
 select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
 join interest_manager.interestratesettings s
-    on s."WalletId" = ''
+    on (s."WalletId" = '' OR s."WalletId" IS NULL)
         and hd."symbol" = s."Asset"
         and (hd."newbalance" >= s."RangeFrom"
             and hd."newbalance" < s."RangeTo")
