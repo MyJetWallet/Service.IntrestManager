@@ -63,6 +63,11 @@ namespace Service.IntrestManager.Engines
             var iterationCount = 0;
 
             var assets = _assetsClient.GetAllAssets();
+            if (!assets.Any())
+            {
+                await Task.Delay(5000);
+                assets = _assetsClient.GetAllAssets();
+            }
             
             while (true)
             {
