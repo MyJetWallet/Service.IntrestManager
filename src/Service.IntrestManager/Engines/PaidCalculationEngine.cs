@@ -110,7 +110,7 @@ namespace Service.IntrestManager.Engines
                 RangeFrom = rangeFrom,
                 RangeTo = rangeTo,
                 WalletCount = walletsCount,
-                TotalPaidInUsd = totalAmount
+                TotalPaidInUsd = (double) totalAmount
             };
             await ctx.SavePaidHistory(paidHistory);
             _logger.LogInformation("Saved paid history: {historyJson}.", JsonConvert.SerializeObject(paidHistory));
