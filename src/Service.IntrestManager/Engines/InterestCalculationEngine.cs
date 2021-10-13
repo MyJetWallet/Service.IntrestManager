@@ -68,12 +68,20 @@ namespace Service.IntrestManager.Engines
                 await Task.Delay(5000);
                 indexPrices = _indexPricesClient.GetIndexPricesAsync();
             }
-            var localIndexPrices = indexPrices.Select(e => new IndexPriceEntity()
+            if (!indexPrices.Any())
             {
-                Asset = e.Asset,
-                PriceInUsd = e.UsdPrice
-            });
-            await databaseContext.UpdateIndexPrice(localIndexPrices);
+                await Task.Delay(5000);
+                indexPrices = _indexPricesClient.GetIndexPricesAsync();
+            }
+            if (indexPrices.Any())
+            {
+                var localIndexPrices = indexPrices.Select(e => new IndexPriceEntity()
+                {
+                    Asset = e.Asset,
+                    PriceInUsd = e.UsdPrice
+                });
+                await databaseContext.UpdateIndexPrice(localIndexPrices);
+            }
         }
     }
 }

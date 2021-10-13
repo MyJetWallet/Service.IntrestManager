@@ -32,7 +32,8 @@ select "WalletId", "Symbol", "NewBalance" from
         order by "Timestamp" desc
     ) t 
 where t.rank = 1 
-    and t."NewBalance" > 0;
+    and t."NewBalance" > 0
+    and "WalletId" != 'SP-BrokerInterest';
 
 -- stage 1
 insert into temp_calculation

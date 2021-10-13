@@ -33,9 +33,16 @@ namespace Service.IntrestManager.Jobs
 
         private async Task DoTime()
         {
-            await _interestCalculationEngine.Execute();
-            await _paidCalculationEngine.Execute();
-            await _interestProcessingEngine.Execute();
+            try
+            {
+                await _interestCalculationEngine.Execute();
+                await _paidCalculationEngine.Execute();
+                await _interestProcessingEngine.Execute();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         public void Start()
