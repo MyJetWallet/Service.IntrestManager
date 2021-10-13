@@ -159,6 +159,7 @@ namespace Service.IntrestManager.Engines
             {
                 interestRatePaid.State = PaidState.Completed;
                 interestRatePaid.Amount = roundedAmount;
+                interestRatePaid.ErrorMessage = string.Empty;
                 lock (serviceBusTaskList)
                 {
                     serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
