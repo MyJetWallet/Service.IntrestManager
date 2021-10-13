@@ -17,6 +17,12 @@ CREATE TEMPORARY TABLE temp_calculation
    Date TIMESTAMP 
 ) ON COMMIT DROP;
 
+CREATE TEMPORARY TABLE temp_calculation_report
+(
+   balanceInUsd DECIMAL,
+   amountInUsd DECIMAL
+) ON COMMIT DROP;
+
 insert into temp_new_balances
 select "WalletId", "Symbol", "NewBalance" from
     (
@@ -69,12 +75,25 @@ where tc.WalletId IS NULL;
 delete from interest_manager.interestratecalculation
 where "Date" = timestamp '${dateArg}';
 
+-- calculation
 insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date")
 select walletid, symbol, newbalance, apy, amount, date from temp_calculation;
---on conflict ("WalletId", "Symbol", "Date")
---DO UPDATE
---SET "NewBalance" = excluded."NewBalance",
---    "Apy" = excluded."Apy",
---    "Amount" = excluded."Amount";
+
+
+-- calculation history
+insert into temp_calculation_report
+select sum(sbs.balanceInUsd), sum(sbs.amountInUsd)
+from (select sum(NewBalance) * p."PriceInUsd" balanceInUsd, sum(Amount) * p."PriceInUsd" amountInUsd
+      from temp_calculation as c
+               inner join interest_manager.indexprice as p
+                          on c.Symbol = p."Asset"
+      group by p."PriceInUsd") as sbs;
+
+insert into interest_manager.calculationhistory ("CalculationDate", "CompletedDate", "WalletCount", "AmountInWalletsInUsd", "CalculatedAmountInUsd")
+values ((timestamp '${dateArg}'),
+        (select current_timestamp at time zone 'utc';),
+        (select count(distinct WalletId) from temp_calculation),
+        (select balanceInUsd from temp_calculation_report),
+        (select amountInUsd from temp_calculation_report));
 
 COMMIT;

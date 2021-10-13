@@ -18,12 +18,14 @@ namespace Service.InterestManager.Postrges
         private const string InterestRatePaidTableName = "interestratepaid";
         private const string CalculationHistoryTableName = "calculationhistory";
         private const string PaidHistoryTableName = "paidhistory";
+        private const string IndexPriceTableName = "indexprice";
         
         private DbSet<InterestRateSettings> InterestRateSettingsCollection { get; set; }
         public DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
         private DbSet<InterestRatePaid> InterestRatePaidCollection { get; set; }
         public DbSet<CalculationHistory> CalculationHistoryCollection { get; set; }
         private DbSet<PaidHistory> PaidHistoryCollection { get; set; }
+        private DbSet<IndexPriceEntity> IndexPriceCollection { get; set; }
         
         public DatabaseContext(DbContextOptions options) : base(options)
         {
@@ -47,10 +49,24 @@ namespace Service.InterestManager.Postrges
             SetInterestRatePaidEntity(modelBuilder);
             SetCalculationHistoryEntity(modelBuilder);
             SetPaidHistoryEntity(modelBuilder);
+            SetIndexPriceEntity(modelBuilder);
             
             base.OnModelCreating(modelBuilder);
         }
-        
+
+        private void SetIndexPriceEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<IndexPriceEntity>().ToTable(IndexPriceTableName);
+            
+            modelBuilder.Entity<IndexPriceEntity>().Property(e => e.Id).UseIdentityColumn();
+            modelBuilder.Entity<IndexPriceEntity>().HasKey(e => e.Id);
+            
+            modelBuilder.Entity<IndexPriceEntity>().Property(e => e.Asset).HasMaxLength(64);
+            modelBuilder.Entity<IndexPriceEntity>().Property(e => e.PriceInUsd);
+            
+            modelBuilder.Entity<IndexPriceEntity>().HasIndex(e => e.Asset);
+        }
+
         private void SetCalculationHistoryEntity(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<CalculationHistory>().ToTable(CalculationHistoryTableName);
@@ -142,6 +158,14 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset});
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.Asset);
+        }
+
+        public async Task UpdateIndexPrice(IEnumerable<IndexPriceEntity> prices)
+        {
+            await Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {Schema}.{IndexPriceTableName};");
+            
+            IndexPriceCollection.AddRange(prices);
+            await SaveChangesAsync();
         }
         
         public List<InterestRatePaid> GetPaidByFilter(long lastId, int batchSize, string assetFilter,

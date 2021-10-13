@@ -55,41 +55,25 @@ namespace Service.IntrestManager.Engines
             ctx.Database.SetCommandTimeout(1200);
 
             var calculationDate = InterestConstants.CalculationPeriodDate;
+            
+            await UpdateIndexPrices(ctx);
             await ctx.ExecCalculationAsync(calculationDate, _logger);
-
-            await SaveCalculationHistory(ctx, calculationDate, InterestConstants.CalculationExecutedDate);
         }
 
-        private async Task SaveCalculationHistory(DatabaseContext ctx, DateTime calculationDate, DateTime completedDate)
+        private async Task UpdateIndexPrices(DatabaseContext databaseContext)
         {
-            var calculations = ctx.GetInterestRateCalculationByDate(calculationDate);
-            var walletCount = calculations.Select(e => e.WalletId).Distinct().Count();
-
-            var amountInWalletsInUsd = 0m;
-            var calculatedAmountInUsd = 0m;
-            foreach (var symbol in calculations.Select(e => e.Symbol).Distinct())
+            var indexPrices = _indexPricesClient.GetIndexPricesAsync();
+            if (!indexPrices.Any())
             {
-                var calculationsBySymbol = calculations.Where(e => e.Symbol == symbol);
-                
-                var amountSum = calculationsBySymbol.Sum(e => e.NewBalance);
-                var (_, usdAmountVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, amountSum);
-                amountInWalletsInUsd += usdAmountVolume;
-                
-                var apySum = calculationsBySymbol.Sum(e => e.Amount);
-                var (_, usdApyVolume) = _indexPricesClient.GetIndexPriceByAssetVolumeAsync(symbol, apySum);
-                calculatedAmountInUsd += usdApyVolume;
+                await Task.Delay(5000);
+                indexPrices = _indexPricesClient.GetIndexPricesAsync();
             }
-            
-            var calculationHistory = new CalculationHistory()
+            var localIndexPrices = indexPrices.Select(e => new IndexPriceEntity()
             {
-                CalculationDate = calculationDate,
-                CompletedDate = completedDate,
-                WalletCount = walletCount,
-                AmountInWalletsInUsd = amountInWalletsInUsd,
-                CalculatedAmountInUsd = calculatedAmountInUsd
-            };
-            await ctx.SaveCalculationHistory(calculationHistory);
-            _logger.LogInformation("Saved calculation history: {historyJson}.", JsonConvert.SerializeObject(calculationHistory));
+                Asset = e.Asset,
+                PriceInUsd = e.UsdPrice
+            });
+            await databaseContext.UpdateIndexPrice(localIndexPrices);
         }
     }
 }
