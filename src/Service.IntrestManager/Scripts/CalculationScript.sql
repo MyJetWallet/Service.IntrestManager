@@ -91,7 +91,7 @@ from (select sum(NewBalance) * p."PriceInUsd" balanceInUsd, sum(Amount) * p."Pri
 
 insert into interest_manager.calculationhistory ("CalculationDate", "CompletedDate", "WalletCount", "AmountInWalletsInUsd", "CalculatedAmountInUsd")
 values ((timestamp '${dateArg}'),
-        (select current_timestamp at time zone 'utc';),
+        (select current_timestamp at time zone 'utc'),
         (select count(distinct WalletId) from temp_calculation),
         (select balanceInUsd from temp_calculation_report),
         (select amountInUsd from temp_calculation_report));
