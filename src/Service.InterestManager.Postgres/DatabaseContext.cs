@@ -227,29 +227,14 @@ namespace Service.InterestManager.Postrges
             
             return calculations.ToList();
         }
-
         public List<CalculationHistory> GetCalculationHistory()
         {
             return CalculationHistoryCollection.ToList();
         }
-
         public List<PaidHistory> GetPaidHistory()
         {
             return PaidHistoryCollection.ToList();
         }
-        
-        public async Task SavePaidHistory(PaidHistory entity)
-        {
-            PaidHistoryCollection.Add(entity);
-            await SaveChangesAsync();
-        }
-
-        public async Task SaveCalculationHistory(CalculationHistory entity)
-        {
-            CalculationHistoryCollection.Add(entity);
-            await SaveChangesAsync();
-        }
-        
         public CalculationHistory GetLastCalculation()
         {
             return CalculationHistoryCollection.OrderByDescending(e => e.CompletedDate).Take(1).FirstOrDefault();
@@ -258,7 +243,6 @@ namespace Service.InterestManager.Postrges
         {
             return PaidHistoryCollection.OrderByDescending(e => e.CreatedDate).Take(1).FirstOrDefault();
         }
-
         public List<InterestRatePaid> GetTop100PaidToProcess()
         {
             return InterestRatePaidCollection
@@ -266,29 +250,6 @@ namespace Service.InterestManager.Postrges
                             e.State == PaidState.Retry)
                 .OrderBy(e => e.Date)
                 .Take(100)
-                .ToList();
-        }
-
-        public async Task SavePaidCollection(IEnumerable<InterestRatePaid> collection)
-        {
-            await InterestRatePaidCollection
-                .UpsertRange(collection)
-                .On(e => new {e.WalletId, e.Symbol, e.Date})
-                .NoUpdate()
-                .RunAsync();
-        }
-        
-        public List<InterestRateCalculation> GetInterestRateCalculationByDate(DateTime date)
-        {
-            return InterestRateCalculationCollection
-                .Where(e => e.Date == date)
-                .ToList();
-        }
-
-        public List<InterestRateCalculation> GetInterestRateCalculationByDateRange(DateTime dateFrom, DateTime dateTo)
-        {
-            return InterestRateCalculationCollection
-                .Where(e => e.Date >= dateFrom && e.Date <= dateTo)
                 .ToList();
         }
 
@@ -349,6 +310,32 @@ namespace Service.InterestManager.Postrges
                 logger.LogInformation($"ExecCalculationAsync start with date {dateArg}");
                 await Database.ExecuteSqlRawAsync(sqlText);
                 logger.LogInformation($"ExecCalculationAsync finish with date {dateArg}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+        }
+        public async Task ExecPaidAsync(DateTime dateFrom, DateTime dateTo, ILogger logger)
+        {
+            try
+            {
+                var path = Path.Combine(Environment.CurrentDirectory, @"Scripts/", "PaidScript.sql");
+                using var script =
+                    new StreamReader(path);
+                var scriptBody = await script.ReadToEndAsync();
+                
+                var dateFromString = $"{dateFrom.Year}-{dateFrom.Month.ToString().PadLeft(2, '0')}-{dateFrom.Day.ToString().PadLeft(2, '0')}" +
+                                     $" {dateFrom.Hour.ToString().PadLeft(2, '0')}:{dateFrom.Minute.ToString().PadLeft(2, '0')}:{dateFrom.Second.ToString().PadLeft(2, '0')}";
+                scriptBody = scriptBody.Replace("${dateFrom}", dateFromString);
+                
+                var dateToString = $"{dateTo.Year}-{dateTo.Month.ToString().PadLeft(2, '0')}-{dateTo.Day.ToString().PadLeft(2, '0')}" +
+                                     $" {dateTo.Hour.ToString().PadLeft(2, '0')}:{dateTo.Minute.ToString().PadLeft(2, '0')}:{dateTo.Second.ToString().PadLeft(2, '0')}";
+                scriptBody = scriptBody.Replace("${dateTo}", dateToString);
+                
+                logger.LogInformation($"ExecPaidAsync start with date from: {dateFromString} and date to: {dateToString}");
+                await Database.ExecuteSqlRawAsync(scriptBody);
+                logger.LogInformation($"ExecPaidAsync finish with date from: {dateFromString} and date to: {dateToString}");
             }
             catch (Exception ex)
             {

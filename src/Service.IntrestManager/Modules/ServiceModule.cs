@@ -50,6 +50,10 @@ namespace Service.IntrestManager.Modules
                 .RegisterType<InterestProcessingEngine>()
                 .AsSelf()
                 .SingleInstance();
+            builder
+                .RegisterType<IndexPriceEngine>()
+                .AsSelf()
+                .SingleInstance();
         }
     }
 }

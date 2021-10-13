@@ -1,13 +1,9 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
-using Newtonsoft.Json;
-using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
-using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines
@@ -16,15 +12,15 @@ namespace Service.IntrestManager.Engines
     {
         private readonly ILogger<InterestCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
-        private readonly IIndexPricesClient _indexPricesClient;
+        private readonly IndexPriceEngine _indexPriceEngine;
 
         public InterestCalculationEngine(ILogger<InterestCalculationEngine> logger, 
             DatabaseContextFactory databaseContextFactory, 
-            IIndexPricesClient indexPricesClient)
+            IndexPriceEngine indexPriceEngine)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
-            _indexPricesClient = indexPricesClient;
+            _indexPriceEngine = indexPriceEngine;
         }
 
         public async Task Execute()
@@ -56,32 +52,8 @@ namespace Service.IntrestManager.Engines
 
             var calculationDate = InterestConstants.CalculationPeriodDate;
             
-            await UpdateIndexPrices(ctx);
+            await _indexPriceEngine.UpdateIndexPrices(ctx);
             await ctx.ExecCalculationAsync(calculationDate, _logger);
-        }
-
-        private async Task UpdateIndexPrices(DatabaseContext databaseContext)
-        {
-            var indexPrices = _indexPricesClient.GetIndexPricesAsync();
-            if (!indexPrices.Any())
-            {
-                await Task.Delay(5000);
-                indexPrices = _indexPricesClient.GetIndexPricesAsync();
-            }
-            if (!indexPrices.Any())
-            {
-                await Task.Delay(5000);
-                indexPrices = _indexPricesClient.GetIndexPricesAsync();
-            }
-            if (indexPrices.Any())
-            {
-                var localIndexPrices = indexPrices.Select(e => new IndexPriceEntity()
-                {
-                    Asset = e.Asset,
-                    PriceInUsd = e.UsdPrice
-                });
-                await databaseContext.UpdateIndexPrice(localIndexPrices);
-            }
         }
     }
 }
