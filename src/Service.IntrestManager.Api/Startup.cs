@@ -11,7 +11,6 @@ using MyJetWallet.Sdk.Service;
 using Prometheus;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Api.Modules;
-using Service.IntrestManager.Grpc;
 using SimpleTrading.ServiceStatusReporterConnector;
 
 namespace Service.IntrestManager.Api
