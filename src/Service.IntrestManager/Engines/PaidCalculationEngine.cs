@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using Service.InterestManager.Postrges;
+using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines
@@ -12,14 +14,17 @@ namespace Service.IntrestManager.Engines
         private readonly ILogger<PaidCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly IndexPriceEngine _indexPriceEngine;
+        private readonly IInterestManagerConfigService _interestManagerConfigService;
 
         public PaidCalculationEngine(ILogger<PaidCalculationEngine> logger, 
             DatabaseContextFactory databaseContextFactory,
-            IndexPriceEngine indexPriceEngine)
+            IndexPriceEngine indexPriceEngine, 
+            IInterestManagerConfigService interestManagerConfigService)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _indexPriceEngine = indexPriceEngine;
+            _interestManagerConfigService = interestManagerConfigService;
         }
 
         public async Task Execute()
@@ -40,9 +45,14 @@ namespace Service.IntrestManager.Engines
             {
                 return true;
             }
-            var paidExpected = DateTime.UtcNow.DayOfWeek == DayOfWeek.Monday &&
-                               lastPaid.CreatedDate.Date != DateTime.UtcNow.Date;
-            return paidExpected;
+            var serviceConfig = await _interestManagerConfigService.GetInterestManagerConfigAsync();
+            return serviceConfig.Config.PaidPeriod switch
+            {
+                PaidPeriod.Day => lastPaid.CreatedDate.Date != DateTime.UtcNow.Date,
+                PaidPeriod.Week => DateTime.UtcNow.DayOfWeek == DayOfWeek.Monday &&
+                                   lastPaid.CreatedDate.Date != DateTime.UtcNow.Date,
+                _ => DateTime.UtcNow.Day == 1 && lastPaid.CreatedDate.Date != DateTime.UtcNow.Date
+            };
         }
 
         private async Task CalculatePaid()
