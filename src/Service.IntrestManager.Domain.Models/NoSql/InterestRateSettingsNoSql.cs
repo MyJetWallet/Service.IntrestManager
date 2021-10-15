@@ -1,8 +1,8 @@
 using MyNoSqlServer.Abstractions;
 
-namespace Service.IntrestManager.Domain.Models
+namespace Service.IntrestManager.Domain.Models.NoSql
 {
-    public class InterestRateSettingsNoSqlEntity : MyNoSqlDbEntity
+    public class InterestRateSettingsNoSql : MyNoSqlDbEntity
     {
         public const string TableName = "jetwallet-interest-rate-settings";
         public static string GeneratePartitionKey(string walletId, string asset) => walletId + "-" + asset;
@@ -11,9 +11,9 @@ namespace Service.IntrestManager.Domain.Models
 
         public InterestRateSettings InterestRateSettings;
         
-        public static InterestRateSettingsNoSqlEntity Create(InterestRateSettings entity)
+        public static InterestRateSettingsNoSql Create(InterestRateSettings entity)
         {
-            return new InterestRateSettingsNoSqlEntity()
+            return new InterestRateSettingsNoSql()
             {
                 PartitionKey = GeneratePartitionKey(entity.WalletId, entity.Asset),
                 RowKey = GenerateRowKey(entity.RangeFrom, entity.RangeTo),

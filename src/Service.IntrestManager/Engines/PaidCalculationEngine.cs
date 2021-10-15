@@ -6,6 +6,7 @@ using MyJetWallet.Sdk.Service;
 using MyNoSqlServer.Abstractions;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines

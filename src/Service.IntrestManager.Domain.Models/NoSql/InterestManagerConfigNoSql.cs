@@ -1,6 +1,6 @@
 using MyNoSqlServer.Abstractions;
 
-namespace Service.IntrestManager.Domain.Models
+namespace Service.IntrestManager.Domain.Models.NoSql
 {
     public class InterestManagerConfigNoSql : MyNoSqlDbEntity
     {

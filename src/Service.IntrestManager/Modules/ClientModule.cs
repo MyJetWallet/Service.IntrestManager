@@ -4,6 +4,7 @@ using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Client;
 using Service.IndexPrices.Client;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.NoSql;
 
 namespace Service.IntrestManager.Modules
 {

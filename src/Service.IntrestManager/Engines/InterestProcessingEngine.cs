@@ -13,6 +13,7 @@ using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.NoSql;
 
 namespace Service.IntrestManager.Engines
 {

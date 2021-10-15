@@ -7,16 +7,17 @@ using MyNoSqlServer.Abstractions;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.NoSql;
 
 namespace Service.IntrestManager.Api.Storage
 {
     public class InterestRateSettingsStorage : IInterestRateSettingsStorage
     {
         private readonly ILogger<InterestRateSettingsStorage> _logger;
-        private readonly IMyNoSqlServerDataWriter<InterestRateSettingsNoSqlEntity> _interestRateWriter;
+        private readonly IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> _interestRateWriter;
         private readonly DatabaseContextFactory _contextFactory;
 
-        public InterestRateSettingsStorage(IMyNoSqlServerDataWriter<InterestRateSettingsNoSqlEntity> interestRateWriter,
+        public InterestRateSettingsStorage(IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> interestRateWriter,
             DatabaseContextFactory contextFactory, 
             ILogger<InterestRateSettingsStorage> logger)
         {
@@ -30,7 +31,7 @@ namespace Service.IntrestManager.Api.Storage
             await using var ctx = _contextFactory.Create();
             var settings = ctx.GetSettings();
 
-            var noSqlSettings = settings.Select(InterestRateSettingsNoSqlEntity.Create).ToList();
+            var noSqlSettings = settings.Select(InterestRateSettingsNoSql.Create).ToList();
 
             await _interestRateWriter.CleanAndKeepMaxPartitions(0);
             await _interestRateWriter.BulkInsertOrReplaceAsync(noSqlSettings);

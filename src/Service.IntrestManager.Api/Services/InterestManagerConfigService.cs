@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
 
