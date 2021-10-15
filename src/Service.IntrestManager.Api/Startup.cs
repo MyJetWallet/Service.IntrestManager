@@ -11,6 +11,8 @@ using MyJetWallet.Sdk.Service;
 using Prometheus;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Api.Modules;
+using Service.IntrestManager.Api.Services;
+using Service.IntrestManager.Grpc;
 using SimpleTrading.ServiceStatusReporterConnector;
 
 namespace Service.IntrestManager.Api
@@ -44,6 +46,10 @@ namespace Service.IntrestManager.Api
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGrpcSchema<InterestRateSettingsService, IInterestRateSettingsService>();
+                endpoints.MapGrpcSchema<InterestManagerConfigService, IInterestManagerConfigService>();
+                endpoints.MapGrpcSchema<InterestManagerService, IInterestManagerService>();
+                
                 endpoints.MapGrpcSchemaRegistry();
 
                 endpoints.MapGet("/", async context =>

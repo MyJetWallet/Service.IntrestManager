@@ -1,5 +1,4 @@
 using Autofac;
-using MyJetWallet.Sdk.NoSql;
 
 namespace Service.IntrestManager.Api.Modules
 {
@@ -7,7 +6,6 @@ namespace Service.IntrestManager.Api.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            var myNoSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
         }
     }
 }

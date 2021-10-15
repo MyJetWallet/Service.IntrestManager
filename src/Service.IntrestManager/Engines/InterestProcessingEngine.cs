@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MyNoSqlServer.Abstractions;
 using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
-using Service.IntrestManager.Grpc;
 
 namespace Service.IntrestManager.Engines
 {
@@ -21,23 +21,23 @@ namespace Service.IntrestManager.Engines
         private readonly ILogger<InterestProcessingEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
-        private readonly IInterestManagerConfigService _interestManagerConfigService;
         private readonly IPublisher<PaidInterestRateMessage> _publisher;
         private readonly IAssetsDictionaryClient _assetsClient;
+        private readonly IMyNoSqlServerDataReader<InterestManagerConfigNoSql> _myNoSqlServerDataReader;
 
         public InterestProcessingEngine(ILogger<InterestProcessingEngine> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
-            IInterestManagerConfigService interestManagerConfigService, 
             IPublisher<PaidInterestRateMessage> publisher, 
-            IAssetsDictionaryClient assetsClient)
+            IAssetsDictionaryClient assetsClient, 
+            IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _spotChangeBalanceService = spotChangeBalanceService;
-            _interestManagerConfigService = interestManagerConfigService;
             _publisher = publisher;
             _assetsClient = assetsClient;
+            _myNoSqlServerDataReader = myNoSqlServerDataReader;
         }
 
         public async Task Execute()
@@ -48,13 +48,11 @@ namespace Service.IntrestManager.Engines
 
         private async Task ProcessInterest()
         {
-            var serviceConfig = await _interestManagerConfigService.GetInterestManagerConfigAsync();
+            var serviceConfig = _myNoSqlServerDataReader.Get().FirstOrDefault();
 
-            if (!serviceConfig.Success ||
-                serviceConfig.Config == null ||
-                string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceBroker) ||
-                string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceClient) ||
-                string.IsNullOrWhiteSpace(serviceConfig.Config.ServiceWallet))
+            if (string.IsNullOrWhiteSpace(serviceConfig?.Config.ServiceBroker) ||
+                string.IsNullOrWhiteSpace(serviceConfig?.Config.ServiceClient) ||
+                string.IsNullOrWhiteSpace(serviceConfig?.Config.ServiceWallet))
             {
                 _logger.LogError("Cannot process interest. Service config IS EMPTY !!!!");
                 return;

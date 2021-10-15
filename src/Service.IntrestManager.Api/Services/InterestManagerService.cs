@@ -6,7 +6,7 @@ using Service.InterestManager.Postrges;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
 
-namespace Service.IntrestManager.Services
+namespace Service.IntrestManager.Api.Services
 {
     public class InterestManagerService : IInterestManagerService
     {

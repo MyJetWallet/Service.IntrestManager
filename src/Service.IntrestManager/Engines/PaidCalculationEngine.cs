@@ -1,10 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MyNoSqlServer.Abstractions;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
-using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines
@@ -14,17 +15,17 @@ namespace Service.IntrestManager.Engines
         private readonly ILogger<PaidCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly IndexPriceEngine _indexPriceEngine;
-        private readonly IInterestManagerConfigService _interestManagerConfigService;
+        private readonly IMyNoSqlServerDataReader<InterestManagerConfigNoSql> _myNoSqlServerDataReader;
 
         public PaidCalculationEngine(ILogger<PaidCalculationEngine> logger, 
             DatabaseContextFactory databaseContextFactory,
-            IndexPriceEngine indexPriceEngine, 
-            IInterestManagerConfigService interestManagerConfigService)
+            IndexPriceEngine indexPriceEngine,
+            IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _indexPriceEngine = indexPriceEngine;
-            _interestManagerConfigService = interestManagerConfigService;
+            _myNoSqlServerDataReader = myNoSqlServerDataReader;
         }
 
         public async Task Execute()
@@ -45,8 +46,8 @@ namespace Service.IntrestManager.Engines
             {
                 return true;
             }
-            var serviceConfig = await _interestManagerConfigService.GetInterestManagerConfigAsync();
-            return serviceConfig.Config.PaidPeriod switch
+            var serviceConfig = _myNoSqlServerDataReader.Get().FirstOrDefault();
+            return serviceConfig?.Config.PaidPeriod switch
             {
                 PaidPeriod.Day => lastPaid.CreatedDate.Date != DateTime.UtcNow.Date,
                 PaidPeriod.Week => DateTime.UtcNow.DayOfWeek == DayOfWeek.Monday &&

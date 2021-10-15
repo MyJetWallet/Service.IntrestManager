@@ -40,11 +40,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Engines" />
-    <Folder Include="Scripts" />
-    <Folder Include="Services" />
-    <Folder Include="Storage" />
-  </ItemGroup>
-
 </Project>

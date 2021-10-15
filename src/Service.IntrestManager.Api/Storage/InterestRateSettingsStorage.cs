@@ -8,7 +8,7 @@ using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
 
-namespace Service.IntrestManager.Storage
+namespace Service.IntrestManager.Api.Storage
 {
     public class InterestRateSettingsStorage : IInterestRateSettingsStorage
     {

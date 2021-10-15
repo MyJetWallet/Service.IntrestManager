@@ -5,17 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Autofac;
-using MyJetWallet.Sdk.GrpcMetrics;
 using MyJetWallet.Sdk.GrpcSchema;
 using MyJetWallet.Sdk.Postgres;
 using MyJetWallet.Sdk.Service;
 using Prometheus;
-using ProtoBuf.Grpc.Server;
 using Service.InterestManager.Postrges;
-using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Modules;
-using Service.IntrestManager.Services;
-using SimpleTrading.BaseMetrics;
 using SimpleTrading.ServiceStatusReporterConnector;
 
 namespace Service.IntrestManager
@@ -50,10 +45,6 @@ namespace Service.IntrestManager
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcSchema<InterestRateSettingsService, IInterestRateSettingsService>();
-                endpoints.MapGrpcSchema<InterestManagerConfigService, IInterestManagerConfigService>();
-                endpoints.MapGrpcSchema<InterestManagerService, IInterestManagerService>();
-
                 endpoints.MapGrpcSchemaRegistry();
 
                 endpoints.MapGet("/", async context =>
