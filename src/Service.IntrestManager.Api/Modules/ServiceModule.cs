@@ -25,6 +25,12 @@ namespace Service.IntrestManager.Api.Modules
                 .RegisterType<InterestRateSettingsStorage>()
                 .As<IInterestRateSettingsStorage>()
                 .SingleInstance();
+            builder
+                .RegisterType<InterestRateByWalletStorage>()
+                .As<IInterestRateByWalletStorage>()
+                .As<IStartable>()
+                .AutoActivate()
+                .SingleInstance();
         }
     }
 }

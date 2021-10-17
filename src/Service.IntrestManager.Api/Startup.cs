@@ -49,6 +49,7 @@ namespace Service.IntrestManager.Api
                 endpoints.MapGrpcSchema<InterestRateSettingsService, IInterestRateSettingsService>();
                 endpoints.MapGrpcSchema<InterestManagerConfigService, IInterestManagerConfigService>();
                 endpoints.MapGrpcSchema<InterestManagerService, IInterestManagerService>();
+                endpoints.MapGrpcSchema<InterestRateClientService, IInterestRateClientService>();
                 
                 endpoints.MapGrpcSchemaRegistry();
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MyNoSqlServer.Abstractions;
 
 namespace Service.IntrestManager.Domain.Models.NoSql
@@ -5,16 +6,19 @@ namespace Service.IntrestManager.Domain.Models.NoSql
     public class InterestRateByWalletNoSql : MyNoSqlDbEntity
     {
         public const string TableName = "jetwallet-interest-rate-by-wallet";
-        public static string GeneratePartitionKey(string wallet) => wallet;
+        public static string GeneratePartitionKey() => "InterestRateByWallet";
         public static string GenerateRowKey() => "InterestRateByWallet";
-        public InterestRateByWallet Rate;
-        public static InterestRateByWalletNoSql Create(InterestRateByWallet entity)
+        public List<InterestRateByWallet> RatesByWallets;
+        public InterestRateByWallet BasicRates;
+        public static InterestRateByWalletNoSql Create(List<InterestRateByWallet>  ratesByWallets, 
+            InterestRateByWallet basicRates)
         {
             return new InterestRateByWalletNoSql()
             {
-                PartitionKey = GeneratePartitionKey(entity.WalletId),
+                PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(),
-                Rate = entity
+                RatesByWallets = ratesByWallets,
+                BasicRates = basicRates
             };
         }
     }
