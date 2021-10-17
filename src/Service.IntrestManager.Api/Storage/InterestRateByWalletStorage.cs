@@ -42,6 +42,14 @@ namespace Service.IntrestManager.Api.Storage
             return basicRates;
         }
 
+        public async Task UpdateRates(List<InterestRateSettings> settings)
+        {
+            _logger.LogInformation("UpdateRates in InterestRateByWalletStorage run with settings : {settingsJson}",
+                JsonConvert.SerializeObject(settings));
+            
+            // todo: implement
+        }
+
         public void Start()
         {
             _logger.LogInformation("InterestRateByWalletStorage start caching.");

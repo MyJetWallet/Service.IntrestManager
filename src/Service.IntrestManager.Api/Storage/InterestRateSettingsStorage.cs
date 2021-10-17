@@ -16,14 +16,17 @@ namespace Service.IntrestManager.Api.Storage
         private readonly ILogger<InterestRateSettingsStorage> _logger;
         private readonly IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> _interestRateWriter;
         private readonly DatabaseContextFactory _contextFactory;
+        private readonly IInterestRateByWalletStorage _interestRateByWalletStorage;
 
         public InterestRateSettingsStorage(IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> interestRateWriter,
             DatabaseContextFactory contextFactory, 
-            ILogger<InterestRateSettingsStorage> logger)
+            ILogger<InterestRateSettingsStorage> logger, 
+            IInterestRateByWalletStorage interestRateByWalletStorage)
         {
             _interestRateWriter = interestRateWriter;
             _contextFactory = contextFactory;
             _logger = logger;
+            _interestRateByWalletStorage = interestRateByWalletStorage;
         }
 
         private async Task SyncSettings()
@@ -35,6 +38,8 @@ namespace Service.IntrestManager.Api.Storage
 
             await _interestRateWriter.CleanAndKeepMaxPartitions(0);
             await _interestRateWriter.BulkInsertOrReplaceAsync(noSqlSettings);
+
+           await _interestRateByWalletStorage.UpdateRates(settings);
         }
 
         public async Task<List<InterestRateSettings>> GetSettings()
