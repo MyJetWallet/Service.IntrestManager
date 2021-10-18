@@ -79,6 +79,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<CalculationHistory>().Property(e => e.WalletCount);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.AmountInWalletsInUsd);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.CalculatedAmountInUsd);
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.SettingsJson);
             
             modelBuilder.Entity<CalculationHistory>().HasIndex(e => e.CompletedDate);
         }

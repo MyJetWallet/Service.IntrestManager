@@ -90,11 +90,12 @@ from (select sum(NewBalance) * p."PriceInUsd" balanceInUsd, sum(Amount) * p."Pri
                           on c.Symbol = p."Asset"
       group by p."PriceInUsd") as sbs;
 
-insert into interest_manager.calculationhistory ("CalculationDate", "CompletedDate", "WalletCount", "AmountInWalletsInUsd", "CalculatedAmountInUsd")
+insert into interest_manager.calculationhistory ("CalculationDate", "CompletedDate", "WalletCount", "AmountInWalletsInUsd", "CalculatedAmountInUsd", "SettingsJson")
 values ((timestamp '${dateArg}'),
         (select current_timestamp at time zone 'utc'),
         (select count(distinct WalletId) from temp_calculation),
         (select balanceInUsd from temp_calculation_report),
-        (select amountInUsd from temp_calculation_report));
+        (select amountInUsd from temp_calculation_report),
+        (select json_agg(interestratesettings) from interest_manager.interestratesettings));
 
 COMMIT;
