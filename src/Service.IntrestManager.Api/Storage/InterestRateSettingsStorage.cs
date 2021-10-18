@@ -39,7 +39,7 @@ namespace Service.IntrestManager.Api.Storage
             await _interestRateWriter.CleanAndKeepMaxPartitions(0);
             await _interestRateWriter.BulkInsertOrReplaceAsync(noSqlSettings);
 
-           await _interestRateByWalletStorage.UpdateRates(settings);
+           await _interestRateByWalletStorage.ClearRates();
         }
 
         public async Task<List<InterestRateSettings>> GetSettings()

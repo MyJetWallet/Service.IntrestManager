@@ -7,6 +7,6 @@ namespace Service.IntrestManager.Domain
     public interface IInterestRateByWalletStorage
     {
         Task<InterestRateByWallet> GetRatesByWallet(string walletId);
-        Task UpdateRates(List<InterestRateSettings> settings);
+        Task ClearRates();
     }
 }

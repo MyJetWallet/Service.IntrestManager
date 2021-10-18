@@ -31,5 +31,8 @@ namespace Service.IntrestManager.Api.Settings
 
         [YamlProperty("InterestManager.MyNoSqlReaderHostPort")]
         public string MyNoSqlReaderHostPort { get; set; }
+
+        [YamlProperty("InterestManager.BalancesGrpcServiceUrl")]
+        public string BalancesGrpcServiceUrl { get; set; }
     }
 }

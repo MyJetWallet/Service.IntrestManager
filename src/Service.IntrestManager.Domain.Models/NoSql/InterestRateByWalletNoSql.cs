@@ -6,19 +6,16 @@ namespace Service.IntrestManager.Domain.Models.NoSql
     public class InterestRateByWalletNoSql : MyNoSqlDbEntity
     {
         public const string TableName = "jetwallet-interest-rate-by-wallet";
-        public static string GeneratePartitionKey() => "InterestRateByWallet";
+        public static string GeneratePartitionKey(string walletId) => walletId;
         public static string GenerateRowKey() => "InterestRateByWallet";
-        public List<InterestRateByWallet> RatesByWallets;
-        public InterestRateByWallet BasicRates;
-        public static InterestRateByWalletNoSql Create(List<InterestRateByWallet>  ratesByWallets, 
-            InterestRateByWallet basicRates)
+        public InterestRateByWallet Rates;
+        public static InterestRateByWalletNoSql Create(InterestRateByWallet entity)
         {
             return new InterestRateByWalletNoSql()
             {
-                PartitionKey = GeneratePartitionKey(),
+                PartitionKey = GeneratePartitionKey(entity.WalletId),
                 RowKey = GenerateRowKey(),
-                RatesByWallets = ratesByWallets,
-                BasicRates = basicRates
+                Rates = entity
             };
         }
     }
