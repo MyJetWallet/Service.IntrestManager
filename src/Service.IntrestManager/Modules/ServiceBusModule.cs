@@ -10,7 +10,7 @@ namespace Service.IntrestManager.Modules
         protected override void Load(ContainerBuilder builder)
         {
             var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
-                Program.ReloadedSettings(e => e.SpotServiceBusHostPort), ApplicationEnvironment.HostName, Program.LogFactory);
+                Program.ReloadedSettings(e => e.SpotServiceBusHostPort), Program.LogFactory);
             builder.RegisterMyServiceBusPublisher<PaidInterestRateMessage>(serviceBusClient, PaidInterestRateMessage.TopicName, true);
         }
     }

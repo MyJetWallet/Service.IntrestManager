@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
 using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Grpc;
@@ -22,14 +23,14 @@ namespace Service.IntrestManager.Engines
         private readonly ILogger<InterestProcessingEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
-        private readonly IPublisher<PaidInterestRateMessage> _publisher;
+        private readonly IServiceBusPublisher<PaidInterestRateMessage> _publisher;
         private readonly IAssetsDictionaryClient _assetsClient;
         private readonly IMyNoSqlServerDataReader<InterestManagerConfigNoSql> _myNoSqlServerDataReader;
 
         public InterestProcessingEngine(ILogger<InterestProcessingEngine> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
-            IPublisher<PaidInterestRateMessage> publisher, 
+            IServiceBusPublisher<PaidInterestRateMessage> publisher, 
             IAssetsDictionaryClient assetsClient, 
             IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader)
         {
@@ -72,7 +73,7 @@ namespace Service.IntrestManager.Engines
             {
                 await Task.Delay(1);
                 
-                var serviceBusTaskList = new List<Task>();
+                var messages = new List<PaidInterestRateMessage>();
                 var gatewayTaskList = new List<Task>();
                 iterationCount++;
                 
@@ -115,11 +116,11 @@ namespace Service.IntrestManager.Engines
                             $"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol}. Cannot find asset in asset dictionary.";
                         continue;
                     }
-                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, serviceBusTaskList, asset.Accuracy));
+                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, messages, asset.Accuracy));
                 }
                 await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
-                await Task.WhenAll(serviceBusTaskList);
+                await _publisher.PublishAsync(messages);
 
                 sv.Stop();
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
@@ -128,7 +129,7 @@ namespace Service.IntrestManager.Engines
         }
 
         private async Task PushToGateway(InterestManagerConfig serviceConfig,
-            InterestRatePaid interestRatePaid, ICollection<Task> serviceBusTaskList, int accuracy)
+            InterestRatePaid interestRatePaid, List<PaidInterestRateMessage> messages, int accuracy)
         {
             var roundedAmount = Math.Round(interestRatePaid.Amount, accuracy, MidpointRounding.ToZero);
             if (roundedAmount == 0m)
@@ -159,9 +160,9 @@ namespace Service.IntrestManager.Engines
                 interestRatePaid.State = PaidState.Completed;
                 interestRatePaid.Amount = roundedAmount;
                 interestRatePaid.ErrorMessage = string.Empty;
-                lock (serviceBusTaskList)
+                lock (messages)
                 {
-                    serviceBusTaskList.Add(_publisher.PublishAsync(new PaidInterestRateMessage()
+                    messages.Add(new PaidInterestRateMessage()
                     {
                         BrokerId = serviceConfig.ServiceBroker,
                         ClientId = serviceConfig.ServiceClient,
@@ -170,7 +171,7 @@ namespace Service.IntrestManager.Engines
                         Symbol = interestRatePaid.Symbol,
                         Date = DateTime.UtcNow,
                         Amount = roundedAmount
-                    }).AsTask());
+                    });
                 }
             }
             else

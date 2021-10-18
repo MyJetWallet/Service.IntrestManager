@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.NoSql;
 using MyJetWallet.Sdk.Service;
+using MyJetWallet.Sdk.ServiceBus;
 using MyServiceBus.TcpClient;
 
 namespace Service.IntrestManager
@@ -10,12 +11,12 @@ namespace Service.IntrestManager
     public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
     {
         private readonly ILogger<ApplicationLifetimeManager> _logger;
-        private readonly MyServiceBusTcpClient _myServiceBusTcpClient;
+        private readonly ServiceBusLifeTime _myServiceBusTcpClient;
         private readonly MyNoSqlClientLifeTime _myNoSqlClientLifeTime;
 
         public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, 
             ILogger<ApplicationLifetimeManager> logger,
-            MyServiceBusTcpClient myServiceBusTcpClient, 
+            ServiceBusLifeTime myServiceBusTcpClient, 
             MyNoSqlClientLifeTime myNoSqlClientLifeTime)
             : base(appLifetime)
         {
