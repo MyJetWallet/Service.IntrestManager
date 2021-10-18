@@ -123,17 +123,17 @@ namespace Service.IntrestManager.Api.Logic
         private static void SetRatesByAsset(IReadOnlyCollection<InterestRateSettings> settingByAssetAndEmptyWallet, 
             InterestRateByWallet ratesByWallet, string asset, WalletBalanceList balances)
         {
+            var rateExist = ratesByWallet.RateCollection.Any(e => e.Asset == asset);
+            if (rateExist) 
+                return;
+            
             if (settingByAssetAndEmptyWallet.Count == 1)
             {
-                var rateExist = ratesByWallet.RateCollection.Any(e => e.Asset == asset);
-                if (!rateExist)
+                ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                 {
-                    ratesByWallet.RateCollection.Add(new InterestRateByAsset()
-                    {
-                        Asset = asset,
-                        Apy = settingByAssetAndEmptyWallet.First().Apy
-                    });
-                }
+                    Asset = asset,
+                    Apy = settingByAssetAndEmptyWallet.First().Apy
+                });
             }
             else
             {
@@ -183,7 +183,7 @@ namespace Service.IntrestManager.Api.Logic
         private static void SetRatesBySettingsWithRange(IEnumerable<InterestRateSettings> settings,
             InterestRateByWallet ratesByWallet, string asset, WalletBalanceList balances)
         {
-            var balanceEntity = balances.Balances.FirstOrDefault(e => e.AssetId == asset);
+            var balanceEntity = balances.Balances?.FirstOrDefault(e => e.AssetId == asset);
             var balance = 0m;
             if (balanceEntity != null)
             {
