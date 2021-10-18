@@ -35,7 +35,7 @@ jobs:
       run: dotnet publish --no-build ./src/Service.IntrestManager/Service.IntrestManager.csproj --configuration Release --output ./publish-job
 
     - name: Publish Service API
-      run: dotnet publish --no-build ./src/Service.IntrestManager.Api/Service.IntrestManager.Api.csproj --configuration Release --output ./publish-api
+      run: dotnet publish --no-build ./src/Service.IntrestManagerapi/Service.IntrestManagerapi.csproj --configuration Release --output ./publish-api
 
     - name: Check Service JOB dir
       run: ls ./publish-job
@@ -50,9 +50,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         path: ./publish-job
         registry: docker.pkg.github.com
-        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager.job-test
+        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanagerjob-test
         tags: latest
-        build_args: app_version=myjetwallet.service.intrestmanager.job-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanagerjob-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
     
     - name: Publish image API
       uses: docker/build-push-action@v1
@@ -61,9 +61,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         path: ./publish-api
         registry: docker.pkg.github.com
-        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager.api-test
+        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanagerapi-test
         tags: latest
-        build_args: app_version=myjetwallet.service.intrestmanager.api-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanagerapi-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
     
     - name: Publish image ST JOB
       uses: docker/build-push-action@v1
@@ -72,10 +72,10 @@ jobs:
         password: ${{ secrets.ST_DOCKER_PASSWORD }}
         path: ./publish-job
         registry: simpletrading.azurecr.io
-        repository: spot/myjetwallet.service.intrestmanager.job-test
+        repository: spot/myjetwallet.service.intrestmanagerjob-test
         tags: latest
         add_git_labels: true
-        build_args: app_version=myjetwallet.service.intrestmanager.job-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanagerjob-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
     - name: Publish image ST API
       uses: docker/build-push-action@v1
@@ -84,10 +84,10 @@ jobs:
         password: ${{ secrets.ST_DOCKER_PASSWORD }}
         path: ./publish-api
         registry: simpletrading.azurecr.io
-        repository: spot/myjetwallet.service.intrestmanager.api-test
+        repository: spot/myjetwallet.service.intrestmanagerapi-test
         tags: latest
         add_git_labels: true
-        build_args: app_version=myjetwallet.service.intrestmanager.api-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanagerapi-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
   restart:
     runs-on: self-hosted    
