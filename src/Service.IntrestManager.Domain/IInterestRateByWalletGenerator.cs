@@ -1,12 +1,11 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Service.IntrestManager.Domain.Models;
 
 namespace Service.IntrestManager.Domain
 {
-    public interface IInterestRateByWalletStorage
+    public interface IInterestRateByWalletGenerator
     {
-        Task<InterestRateByWallet> GetRatesByWallet(string walletId);
+        Task<InterestRateByWallet> GenerateRatesByWallet(string walletId);
         Task ClearRates();
     }
 }

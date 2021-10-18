@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
-using Newtonsoft.Json;
 using Service.AssetsDictionary.Client;
 using Service.AssetsDictionary.Domain.Models;
 using Service.Balances.Grpc;
@@ -13,42 +11,30 @@ using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Domain.Models.NoSql;
 
-namespace Service.IntrestManager.Api.Storage
+namespace Service.IntrestManager.Api.Logic
 {
-    public class InterestRateByWalletStorage : IInterestRateByWalletStorage, IStartable
+    public class InterestRateByWalletGenerator : IInterestRateByWalletGenerator
     {
-        private readonly ILogger<InterestRateByWalletStorage> _logger;
-        private readonly IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> _writer;
+        private readonly ILogger<InterestRateByWalletGenerator> _logger;
+        private readonly IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> _ratesWriter;
         private readonly IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> _settingWriter;
         private readonly IWalletBalanceService _walletBalanceService;
         private readonly IAssetsDictionaryClient _assetsDictionaryClient;
 
-        public InterestRateByWalletStorage(IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> writer, 
-            ILogger<InterestRateByWalletStorage> logger, 
+        public InterestRateByWalletGenerator(IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> ratesWriter, 
+            ILogger<InterestRateByWalletGenerator> logger, 
             IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> settingWriter, 
             IWalletBalanceService walletBalanceService, 
             IAssetsDictionaryClient assetsDictionaryClient)
         {
-            _writer = writer;
+            _ratesWriter = ratesWriter;
             _logger = logger;
             _settingWriter = settingWriter;
             _walletBalanceService = walletBalanceService;
             _assetsDictionaryClient = assetsDictionaryClient;
         }
-
-        public async Task<InterestRateByWallet> GetRatesByWallet(string walletId)
-        {
-            var cache = (await _writer.GetAsync(walletId)).FirstOrDefault();
-
-            if (cache != null)
-                return cache.Rates;
-            
-            var rates = await GenerateRatesByWallet(walletId);
-            await _writer.InsertOrReplaceAsync(InterestRateByWalletNoSql.Create(rates));
-            return rates;
-        }
-
-        private async Task<InterestRateByWallet> GenerateRatesByWallet(string walletId)
+        
+        public async Task<InterestRateByWallet> GenerateRatesByWallet(string walletId)
         {
             var settingsNoSql = (await _settingWriter.GetAsync()).ToList();
             var settings = settingsNoSql
@@ -86,15 +72,73 @@ namespace Service.IntrestManager.Api.Storage
             var settingByWallet = settings
                 .Where(e => e.WalletId == walletId && string.IsNullOrEmpty(e.Asset))
                 .ToList();
-
+            
             if (settingByWallet.Any())
             {
                 SetRatesByWallet(settingByWallet, assets, ratesByWallet, settingsNoSql);
             }
             
             // stage 3 : empty wallet + asset
+            foreach (var asset in assets.Select(e => e.Symbol).Distinct())
+            {
+                var settingByAssetAndEmptyWallet = settings
+                    .Where(e => string.IsNullOrEmpty(e.WalletId) && e.Asset == asset)
+                    .ToList();
+
+                if (settingByAssetAndEmptyWallet.Any())
+                {
+                    SetRatesByAsset(settingByAssetAndEmptyWallet, ratesByWallet, asset, balances);
+                }
+            }
+
+            // stage 4 : rates without settings
+            SetZeroRates(assets, ratesByWallet);
+
+            await SaveToNoSql(ratesByWallet);
 
             return ratesByWallet;
+        }
+
+        private async Task SaveToNoSql(InterestRateByWallet ratesByWallet)
+        {
+            await _ratesWriter.InsertOrReplaceAsync(InterestRateByWalletNoSql.Create(ratesByWallet));
+        }
+
+        private static void SetZeroRates(IReadOnlyList<IAsset> assets, InterestRateByWallet ratesByWallet)
+        {
+            foreach (var asset in assets.Select(e => e.Symbol).Distinct())
+            {
+                var rateExist = ratesByWallet.RateCollection.Any(e => e.Asset == asset);
+                if (!rateExist)
+                {
+                    ratesByWallet.RateCollection.Add(new InterestRateByAsset()
+                    {
+                        Asset = asset,
+                        Apy = 0
+                    });
+                }
+            }
+        }
+
+        private static void SetRatesByAsset(IReadOnlyCollection<InterestRateSettings> settingByAssetAndEmptyWallet, 
+            InterestRateByWallet ratesByWallet, string asset, WalletBalanceList balances)
+        {
+            if (settingByAssetAndEmptyWallet.Count == 1)
+            {
+                var rateExist = ratesByWallet.RateCollection.Any(e => e.Asset == asset);
+                if (!rateExist)
+                {
+                    ratesByWallet.RateCollection.Add(new InterestRateByAsset()
+                    {
+                        Asset = asset,
+                        Apy = settingByAssetAndEmptyWallet.First().Apy
+                    });
+                }
+            }
+            else
+            {
+                SetRatesBySettingsWithRange(settingByAssetAndEmptyWallet, ratesByWallet, asset, balances);
+            }
         }
 
         private static void SetRatesByWallet(IReadOnlyCollection<InterestRateSettings> settingByWallet, 
@@ -132,23 +176,29 @@ namespace Service.IntrestManager.Api.Storage
             }
             else
             {
-                var balanceEntity = balances.Balances.FirstOrDefault(e => e.AssetId == asset);
-                var balance = 0m;
-                if (balanceEntity != null)
-                {
-                    balance = (decimal) balanceEntity.Balance;
-                }
+                SetRatesBySettingsWithRange(settingForWalletAndAsset, ratesByWallet, asset, balances);
+            }
+        }
 
-                foreach (var s in settingForWalletAndAsset)
+        private static void SetRatesBySettingsWithRange(IEnumerable<InterestRateSettings> settings,
+            InterestRateByWallet ratesByWallet, string asset, WalletBalanceList balances)
+        {
+            var balanceEntity = balances.Balances.FirstOrDefault(e => e.AssetId == asset);
+            var balance = 0m;
+            if (balanceEntity != null)
+            {
+                balance = (decimal) balanceEntity.Balance;
+            }
+
+            foreach (var s in settings)
+            {
+                if (balance >= s.RangeFrom && balance < s.RangeTo)
                 {
-                    if (balance >= s.RangeFrom && balance < s.RangeTo)
+                    ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                     {
-                        ratesByWallet.RateCollection.Add(new InterestRateByAsset()
-                        {
-                            Asset = asset,
-                            Apy = s.Apy
-                        });
-                    }
+                        Asset = asset,
+                        Apy = s.Apy
+                    });
                 }
             }
         }
@@ -172,15 +222,8 @@ namespace Service.IntrestManager.Api.Storage
 
         public async Task ClearRates()
         {
-            _logger.LogInformation("ClearRates run in InterestRateByWalletStorage");
-            await _writer.CleanAndKeepMaxPartitions(0);
-        }
-
-        public void Start()
-        {
-            _logger.LogInformation("InterestRateByWalletStorage start caching.");
-            var cache = _writer.GetAsync().GetAwaiter().GetResult();
-            _logger.LogInformation($"InterestRateByWalletStorage finish caching {cache.Count()} records.");
+            _logger.LogInformation("ClearRates run in InterestRateByWalletGenerator");
+            await _ratesWriter.CleanAndKeepMaxPartitions(0);
         }
     }
 }

@@ -9,14 +9,14 @@ namespace Service.IntrestManager.Api.Services
     public class InterestRateClientService : IInterestRateClientService
     {
         private readonly ILogger<InterestRateClientService> _logger;
-        private readonly IInterestRateByWalletStorage _interestRateByWalletStorage;
+        private readonly IInterestRateByWalletGenerator _interestRateByWalletGenerator;
         
 
         public InterestRateClientService(ILogger<InterestRateClientService> logger, 
-            IInterestRateByWalletStorage interestRateByWalletStorage)
+            IInterestRateByWalletGenerator interestRateByWalletGenerator)
         {
             _logger = logger;
-            _interestRateByWalletStorage = interestRateByWalletStorage;
+            _interestRateByWalletGenerator = interestRateByWalletGenerator;
         }
 
         public async Task<GetInterestRatesByWalletResponse> GetInterestRatesByWalletAsync(GetInterestRatesByWalletRequest request)
@@ -31,7 +31,8 @@ namespace Service.IntrestManager.Api.Services
                         ErrorMessage = "WalletId is empty."
                     };
                 }
-                var rates = await _interestRateByWalletStorage.GetRatesByWallet(request.WalletId);
+                var rates = await _interestRateByWalletGenerator
+                    .GenerateRatesByWallet(request.WalletId);
                 return new GetInterestRatesByWalletResponse()
                 {
                     Success = true,

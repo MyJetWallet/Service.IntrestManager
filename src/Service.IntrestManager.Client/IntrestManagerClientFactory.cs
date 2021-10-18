@@ -14,5 +14,6 @@ namespace Service.IntrestManager.Client
         public IInterestRateSettingsService GetInterestRateSettingsService() => CreateGrpcService<IInterestRateSettingsService>();
         public IInterestManagerConfigService GetInterestManagerConfigService() => CreateGrpcService<IInterestManagerConfigService>();
         public IInterestManagerService GetInterestManagerService() => CreateGrpcService<IInterestManagerService>();
+        public IInterestRateClientService GetInterestRateClientService() => CreateGrpcService<IInterestRateClientService>();
     }
 }
