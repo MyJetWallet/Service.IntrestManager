@@ -31,44 +31,81 @@ jobs:
     - name: ls
       run: ls
 
-    - name: Publish Service
-      run: dotnet publish --no-build ./src/Service.IntrestManager/Service.IntrestManager.csproj --configuration Release --output ./publish-api
+    - name: Publish Service JOB
+      run: dotnet publish --no-build ./src/Service.IntrestManager/Service.IntrestManager.csproj --configuration Release --output ./publish-job
 
-    - name: Check Service dir
-      run: ls ./publish-api
+    - name: Publish Service API
+      run: dotnet publish --no-build ./src/Service.IntrestManager.Api/Service.IntrestManager.Api.csproj --configuration Release --output ./publish-api
+
+    - name: Check Service JOB dir
+      run: ls ./publish-job
       
-    - name: Publish image
+    - name: Check Service API dir
+      run: ls ./publish-api
+
+    - name: Publish image JOB
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        path: ./publish-job
+        registry: docker.pkg.github.com
+        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager.job-test
+        tags: latest
+        build_args: app_version=myjetwallet.service.intrestmanager.job-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+    
+    - name: Publish image API
       uses: docker/build-push-action@v1
       with:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         path: ./publish-api
         registry: docker.pkg.github.com
-        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager-test
+        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager.api-test
         tags: latest
-        build_args: app_version=myjetwallet.service.intrestmanager-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanager.api-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+    
+    - name: Publish image ST JOB
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ secrets.ST_DOCKER_USER }}
+        password: ${{ secrets.ST_DOCKER_PASSWORD }}
+        path: ./publish-job
+        registry: simpletrading.azurecr.io
+        repository: spot/myjetwallet.service.intrestmanager.job-test
+        tags: latest
+        add_git_labels: true
+        build_args: app_version=myjetwallet.service.intrestmanager.job-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
-    - name: Publish image ST
+    - name: Publish image ST API
       uses: docker/build-push-action@v1
       with:
         username: ${{ secrets.ST_DOCKER_USER }}
         password: ${{ secrets.ST_DOCKER_PASSWORD }}
         path: ./publish-api
         registry: simpletrading.azurecr.io
-        repository: spot/myjetwallet.service.intrestmanager-test
+        repository: spot/myjetwallet.service.intrestmanager.api-test
         tags: latest
         add_git_labels: true
-        build_args: app_version=myjetwallet.service.intrestmanager-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanager.api-test:latest,app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
   restart:
     runs-on: self-hosted    
     needs: build
     steps:
-    - name: Restart service
+
+    - name: Restart service JOB
       uses: Myjetwallet/kube-restart-pods@master
       env:
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA__ST_TEST }}
         NAMESPACE: ${{ secrets.KUBE_TEST_NAMESPACE }}
-        POD: intrestmanager
+        POD: intrestmanager-job
+
+    - name: Restart service API
+      uses: Myjetwallet/kube-restart-pods@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA__ST_TEST }}
+        NAMESPACE: ${{ secrets.KUBE_TEST_NAMESPACE }}
+        POD: intrestmanager-api
 
 
