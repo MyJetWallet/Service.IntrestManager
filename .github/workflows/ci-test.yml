@@ -35,7 +35,7 @@ jobs:
       run: dotnet publish --no-build ./src/Service.IntrestManager/Service.IntrestManager.csproj --configuration Release --output ./publish-job
 
     - name: Publish Service API
-      run: dotnet publish --no-build ./src/Service.IntrestManagerapi/Service.IntrestManagerapi.csproj --configuration Release --output ./publish-api
+      run: dotnet publish --no-build ./src/Service.IntrestManager.Api/Service.IntrestManagerapi.csproj --configuration Release --output ./publish-api
 
     - name: Check Service JOB dir
       run: ls ./publish-job
