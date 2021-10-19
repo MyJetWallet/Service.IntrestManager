@@ -80,7 +80,6 @@ where "Date" = timestamp '${dateArg}';
 insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date")
 select walletid, symbol, newbalance, apy, amount, date from temp_calculation;
 
-
 -- calculation history
 insert into temp_calculation_report
 select sum(sbs.balanceInUsd), sum(sbs.amountInUsd)

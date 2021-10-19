@@ -1,5 +1,7 @@
 ﻿using Autofac;
+using MyJetWallet.Sdk.NoSql;
 using Service.InterestManager.Postrges;
+using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Engines;
 using Service.IntrestManager.Jobs;
 
@@ -9,6 +11,9 @@ namespace Service.IntrestManager.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterMyNoSqlWriter<InterestRateByWalletNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
+                InterestRateByWalletNoSql.TableName);
+            
             builder.RegisterType<DatabaseContextFactory>().AsSelf().SingleInstance();
 
             builder

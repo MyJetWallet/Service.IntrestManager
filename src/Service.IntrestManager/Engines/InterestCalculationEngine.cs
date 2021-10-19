@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MyNoSqlServer.Abstractions;
 using Service.InterestManager.Postrges;
+using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Storage;
 
 namespace Service.IntrestManager.Engines
@@ -13,14 +15,17 @@ namespace Service.IntrestManager.Engines
         private readonly ILogger<InterestCalculationEngine> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
         private readonly IndexPriceEngine _indexPriceEngine;
+        private readonly IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> _ratesWriter;
 
         public InterestCalculationEngine(ILogger<InterestCalculationEngine> logger, 
             DatabaseContextFactory databaseContextFactory, 
-            IndexPriceEngine indexPriceEngine)
+            IndexPriceEngine indexPriceEngine, 
+            IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> ratesWriter)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
             _indexPriceEngine = indexPriceEngine;
+            _ratesWriter = ratesWriter;
         }
 
         public async Task Execute()
@@ -54,6 +59,7 @@ namespace Service.IntrestManager.Engines
             
             await _indexPriceEngine.UpdateIndexPrices(ctx);
             await ctx.ExecCalculationAsync(calculationDate, _logger);
+            await _ratesWriter.CleanAndKeepMaxPartitions(0);
         }
     }
 }
