@@ -13,5 +13,6 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 5)] public decimal Apy { get; set; }
         [DataMember(Order = 6)] public decimal Amount { get; set; }
         [DataMember(Order = 7)] public DateTime Date { get; set; }
+        [DataMember(Order = 8)] public long HistoryId { get; set; }
     }
 }

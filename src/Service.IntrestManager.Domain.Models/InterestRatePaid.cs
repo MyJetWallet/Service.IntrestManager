@@ -14,6 +14,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 6)] public PaidState State { get; set; }
         [DataMember(Order = 7)] public string ErrorMessage { get; set; }
         [DataMember(Order = 8)] public string TransactionId { get; set; }
+        [DataMember(Order = 9)] public long HistoryId { get; set; }
     }
 
     [DataContract]

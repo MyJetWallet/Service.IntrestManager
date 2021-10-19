@@ -115,6 +115,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.State);
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.ErrorMessage);
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.TransactionId);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.HistoryId);
             
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol});
@@ -136,6 +137,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Apy);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Amount);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Date);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.HistoryId);
             
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol});
