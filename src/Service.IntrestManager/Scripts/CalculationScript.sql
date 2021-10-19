@@ -14,7 +14,7 @@ CREATE TEMPORARY TABLE temp_calculation
    NewBalance DECIMAL,
    Apy DECIMAL,
    Amount DECIMAL,
-   Date TIMESTAMP 
+   Date TIMESTAMP
 ) ON COMMIT DROP;
 
 CREATE TEMPORARY TABLE temp_calculation_report
@@ -30,55 +30,51 @@ select "WalletId", "Symbol", "NewBalance" from
         from balancehistory.balance_history
         where "Timestamp" <= timestamp '${dateArg}'
         order by "Timestamp" desc
-    ) t 
-where t.rank = 1 
-    and t."NewBalance" > 0
-    and "WalletId" != 'SP-BrokerInterest';
+    ) t
+where t.rank = 1
+  and t."NewBalance" > 0
+  and "WalletId" != 'SP-BrokerInterest';
 
 -- stage 1
 insert into temp_calculation
 select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
-join interest_manager.interestratesettings s
-    on hd."walletid" = s."WalletId"
-        and hd."symbol" = s."Asset"
-        and (hd."newbalance" >= s."RangeFrom"
-            and hd."newbalance" < s."RangeTo");
+         join interest_manager.interestratesettings s
+              on hd."walletid" = s."WalletId"
+                  and hd."symbol" = s."Asset"
+                  and (hd."newbalance" >= s."RangeFrom"
+                      and hd."newbalance" < s."RangeTo");
 
 -- stage 2
 insert into temp_calculation
 select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
-join interest_manager.interestratesettings s
-    on hd."walletid" = s."WalletId"
-        and (s."Asset" = '' OR s."Asset" IS NULL)
-        and s."RangeFrom" = 0
-        and s."RangeTo" = 0
-left join temp_calculation tc
-    on hd."symbol" = tc.Symbol
-        and hd."walletid" = tc.WalletId
+         join interest_manager.interestratesettings s
+              on hd."walletid" = s."WalletId"
+                  and (s."Asset" = '' OR s."Asset" IS NULL)
+                  and s."RangeFrom" = 0
+                  and s."RangeTo" = 0
+         left join temp_calculation tc
+                   on hd."symbol" = tc.Symbol
+                       and hd."walletid" = tc.WalletId
 where tc.WalletId IS NULL;
 
 -- stage 3
 insert into temp_calculation
 select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
-join interest_manager.interestratesettings s
-    on (s."WalletId" = '' OR s."WalletId" IS NULL)
-        and hd."symbol" = s."Asset"
-        and (hd."newbalance" >= s."RangeFrom"
-            and hd."newbalance" < s."RangeTo")
-left join temp_calculation tc
-    on hd."symbol" = tc.Symbol
-        and hd."walletid" = tc.WalletId
+         join interest_manager.interestratesettings s
+              on (s."WalletId" = '' OR s."WalletId" IS NULL)
+                  and hd."symbol" = s."Asset"
+                  and (hd."newbalance" >= s."RangeFrom"
+                      and hd."newbalance" < s."RangeTo")
+         left join temp_calculation tc
+                   on hd."symbol" = tc.Symbol
+                       and hd."walletid" = tc.WalletId
 where tc.WalletId IS NULL;
 
 delete from interest_manager.interestratecalculation
 where "Date" = timestamp '${dateArg}';
-
--- calculation
-insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date")
-select walletid, symbol, newbalance, apy, amount, date from temp_calculation;
 
 -- calculation history
 insert into temp_calculation_report
@@ -96,5 +92,16 @@ values ((timestamp '${dateArg}'),
         (select balanceInUsd from temp_calculation_report),
         (select amountInUsd from temp_calculation_report),
         (select json_agg(interestratesettings) from interest_manager.interestratesettings));
+
+-- calculation
+insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date", "HistoryId")
+select walletid,
+       symbol,
+       newbalance,
+       apy,
+       amount,
+       date,
+       (select "Id" from interest_manager.calculationhistory order by "Id" desc limit 1)
+from temp_calculation;
 
 COMMIT;
