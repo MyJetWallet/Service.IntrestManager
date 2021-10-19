@@ -29,7 +29,7 @@ namespace Service.IntrestManager.Api.Storage
             _interestRateByWalletGenerator = interestRateByWalletGenerator;
         }
 
-        private async Task SyncSettings()
+        public async Task SyncSettings()
         {
             await using var ctx = _contextFactory.Create();
             var settings = ctx.GetSettings();

@@ -13,5 +13,7 @@ namespace Service.IntrestManager.Grpc
         Task<UpsertInterestRateSettingsResponse> UpsertInterestRateSettingsAsync(UpsertInterestRateSettingsRequest request);
         [OperationContract]
         Task<RemoveInterestRateSettingsResponse> RemoveInterestRateSettingsAsync(RemoveInterestRateSettingsRequest request);
+        [OperationContract]
+        Task<SyncDbAndNoSqlResponse> SyncDbAndNoSqlAsync();
     }
 }

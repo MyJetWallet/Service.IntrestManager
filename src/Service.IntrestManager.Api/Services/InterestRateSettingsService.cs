@@ -84,5 +84,27 @@ namespace Service.IntrestManager.Api.Services
                 };
             }
         }
+
+        public async Task<SyncDbAndNoSqlResponse> SyncDbAndNoSqlAsync()
+        {
+            try
+            {
+                await _interestRateSettingsStorage.SyncSettings();
+
+                return new SyncDbAndNoSqlResponse()
+                {
+                    Success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new SyncDbAndNoSqlResponse()
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
     }
 }
