@@ -35,7 +35,7 @@ namespace Service.IntrestManager.Engines
         private async Task<bool> CalculationExpected()
         {
             await using var ctx = _databaseContextFactory.Create();
-            var lastCalculation = ctx.GetLastCalculation();
+            var lastCalculation = ctx.GetLastCalculationHistory();
 
             if (lastCalculation == null)
             {

@@ -15,5 +15,6 @@ namespace Service.IntrestManager.Domain.Models
     {
         [DataMember(Order = 1)] public string Asset { get; set; }
         [DataMember(Order = 2)] public decimal Apy { get; set; }
+        [DataMember(Order = 3)] public decimal AccumulatedAmount { get; set; }
     }
 }

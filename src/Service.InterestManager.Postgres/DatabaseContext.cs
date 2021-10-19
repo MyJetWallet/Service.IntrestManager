@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Flurl.Util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Service.IntrestManager.Domain.Models;
@@ -236,11 +237,11 @@ namespace Service.InterestManager.Postrges
         {
             return PaidHistoryCollection.ToList();
         }
-        public CalculationHistory GetLastCalculation()
+        public CalculationHistory GetLastCalculationHistory()
         {
             return CalculationHistoryCollection.OrderByDescending(e => e.CompletedDate).Take(1).FirstOrDefault();
         }
-        public PaidHistory GetLastPaid()
+        public PaidHistory GetLastPaidHistory()
         {
             return PaidHistoryCollection.OrderByDescending(e => e.CreatedDate).Take(1).FirstOrDefault();
         }
@@ -350,6 +351,31 @@ namespace Service.InterestManager.Postrges
                 .Where(e => e.Date == createdDate && e.State == PaidState.Failed)
                 .ForEachAsync(e => e.State = PaidState.Retry);
             await SaveChangesAsync();
+        }
+
+        public Dictionary<string, decimal> GetAccumulatedRates(string walletId)
+        {
+            var lastPaid = GetLastPaidHistory();
+
+            var rates = InterestRateCalculationCollection
+                .Where(e => e.WalletId == walletId && e.Date > lastPaid.RangeTo)
+                .ToList();
+
+            var ratesDictionary = new Dictionary<string, decimal>();
+            
+            rates.ForEach(e =>
+            {
+                if (ratesDictionary.TryGetValue(e.Symbol, out _))
+                {
+                    ratesDictionary[e.Symbol] += e.Amount;
+                }
+                else
+                {
+                    ratesDictionary.Add(e.Symbol, e.Amount);
+                }
+            });
+
+            return ratesDictionary;
         }
     }
 }

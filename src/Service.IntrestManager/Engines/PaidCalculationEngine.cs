@@ -41,7 +41,7 @@ namespace Service.IntrestManager.Engines
         private async Task<bool> GedPaidExpectedState()
         {
             await using var ctx = _databaseContextFactory.Create();
-            var lastPaid = ctx.GetLastPaid();
+            var lastPaid = ctx.GetLastPaidHistory();
 
             if (lastPaid == null)
             {
@@ -61,7 +61,7 @@ namespace Service.IntrestManager.Engines
         {
             await using var ctx = _databaseContextFactory.Create();
             
-            var dateFrom = ctx.GetLastPaid()?.RangeTo.AddMilliseconds(1) ?? DateTime.MinValue;
+            var dateFrom = ctx.GetLastPaidHistory()?.RangeTo.AddMilliseconds(1) ?? DateTime.MinValue;
             var dateTo = InterestConstants.PaidPeriodToDate;
             
             _logger.LogInformation($"CalculatePaid started work with dateFrom: {dateFrom} and dateTo: {dateTo}");

@@ -11,7 +11,7 @@ namespace Service.IntrestManager.Grpc
         [OperationContract]
         Task<GetInterestRatesByWalletResponse> GetInterestRatesByWalletAsync(GetInterestRatesByWalletRequest request);
     }
-
+    
     [DataContract]
     public class GetInterestRatesByWalletRequest
     {

@@ -7,6 +7,7 @@ using Service.AssetsDictionary.Client;
 using Service.AssetsDictionary.Domain.Models;
 using Service.Balances.Grpc;
 using Service.Balances.Grpc.Models;
+using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Domain.Models.NoSql;
@@ -20,18 +21,21 @@ namespace Service.IntrestManager.Api.Logic
         private readonly IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> _settingWriter;
         private readonly IWalletBalanceService _walletBalanceService;
         private readonly IAssetsDictionaryClient _assetsDictionaryClient;
+        private readonly DatabaseContextFactory _contextFactory;
 
         public InterestRateByWalletGenerator(IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> ratesWriter, 
             ILogger<InterestRateByWalletGenerator> logger, 
             IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> settingWriter, 
             IWalletBalanceService walletBalanceService, 
-            IAssetsDictionaryClient assetsDictionaryClient)
+            IAssetsDictionaryClient assetsDictionaryClient, 
+            DatabaseContextFactory contextFactory)
         {
             _ratesWriter = ratesWriter;
             _logger = logger;
             _settingWriter = settingWriter;
             _walletBalanceService = walletBalanceService;
             _assetsDictionaryClient = assetsDictionaryClient;
+            _contextFactory = contextFactory;
         }
         
         public async Task<InterestRateByWallet> GenerateRatesByWallet(string walletId)
@@ -93,10 +97,26 @@ namespace Service.IntrestManager.Api.Logic
 
             // stage 4 : rates without settings
             SetZeroRates(assets, ratesByWallet);
+            
+            // stage 4 : set accumulated rates
+            await SetAccumulatedRates(ratesByWallet);
 
             await SaveToNoSql(ratesByWallet);
 
             return ratesByWallet;
+        }
+
+        private async Task SetAccumulatedRates(InterestRateByWallet ratesByWallet)
+        {
+            await using var ctx = _contextFactory.Create();
+            var accumulatedRate = ctx.GetAccumulatedRates(ratesByWallet.WalletId);
+            
+            ratesByWallet.RateCollection.ForEach(e =>
+            {
+                e.AccumulatedAmount = accumulatedRate.TryGetValue(e.Asset, out var amount) 
+                    ? amount 
+                    : 0;
+            });
         }
 
         private async Task SaveToNoSql(InterestRateByWallet ratesByWallet)
