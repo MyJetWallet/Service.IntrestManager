@@ -13,5 +13,6 @@ namespace Service.IntrestManager.Grpc.Models
         [DataMember(Order = 4)] public string WalletFilter { get; set; }
         [DataMember(Order = 5)] public DateTime DateFilter { get; set; }
         [DataMember(Order = 6)] public PaidState StateFilter { get; set; }
+        [DataMember(Order = 7)] public long HistoryFilter { get; set; }
     }
 }

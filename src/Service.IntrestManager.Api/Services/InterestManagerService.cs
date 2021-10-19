@@ -72,7 +72,8 @@ namespace Service.IntrestManager.Api.Services
             {
                 await using var ctx = _databaseContextFactory.Create();
                 var calculations = ctx.GetCalculationByFilter(request.LastId,
-                    request.BatchSize, request.AssetFilter, request.WalletFilter, request.DateFilter);
+                    request.BatchSize, request.AssetFilter, request.WalletFilter, 
+                    request.DateFilter, request.HistoryFilter);
                 
                 long idForNextQuery = 0;
                 if (calculations.Any())
@@ -103,7 +104,8 @@ namespace Service.IntrestManager.Api.Services
             {
                 await using var ctx = _databaseContextFactory.Create();
                 var paid = ctx.GetPaidByFilter(request.LastId,
-                    request.BatchSize, request.AssetFilter, request.WalletFilter, request.DateFilter, request.StateFilter);
+                    request.BatchSize, request.AssetFilter, request.WalletFilter, 
+                    request.DateFilter, request.StateFilter, request.HistoryFilter);
                 
                 long idForNextQuery = 0;
                 if (paid.Any())

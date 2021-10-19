@@ -173,7 +173,7 @@ namespace Service.InterestManager.Postrges
         }
         
         public List<InterestRatePaid> GetPaidByFilter(long lastId, int batchSize, string assetFilter,
-            string walletFilter, DateTime dateFilter, PaidState stateFilter)
+            string walletFilter, DateTime dateFilter, PaidState stateFilter, long historyFilter)
         {
             IQueryable<InterestRatePaid> paid = InterestRatePaidCollection;
             if (lastId != 0)
@@ -196,6 +196,10 @@ namespace Service.InterestManager.Postrges
             {
                 paid = paid.Where(e => e.State == stateFilter);
             }
+            if (historyFilter != 0)
+            {
+                paid = paid.Where(e => e.HistoryId == historyFilter);
+            }
             paid = paid
                 .OrderByDescending(trade => trade.Id)
                 .Take(batchSize);
@@ -204,7 +208,7 @@ namespace Service.InterestManager.Postrges
         }
         
         public List<InterestRateCalculation> GetCalculationByFilter(long lastId, int batchSize, string assetFilter,
-            string walletFilter, DateTime dateFilter)
+            string walletFilter, DateTime dateFilter, long historyFilter)
         {
             IQueryable<InterestRateCalculation> calculations = InterestRateCalculationCollection;
             if (lastId != 0)
@@ -222,6 +226,10 @@ namespace Service.InterestManager.Postrges
             if (dateFilter != DateTime.MinValue)
             {
                 calculations = calculations.Where(e => e.Date == dateFilter);
+            }
+            if (historyFilter != 0)
+            {
+                calculations = calculations.Where(e => e.HistoryId == historyFilter);
             }
             calculations = calculations
                 .OrderByDescending(trade => trade.Id)
