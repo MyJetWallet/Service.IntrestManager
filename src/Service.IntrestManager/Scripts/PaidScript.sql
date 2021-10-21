@@ -45,7 +45,7 @@ select
     (timestamp '${dateFrom}'),
     (timestamp '${dateTo}'),
     (select count(distinct WalletId) from temp_paid),
-    (select amountInUsd from temp_paid_report);
+    (COALESCE((select amountInUsd from temp_paid_report), 0));
 
 -- paid
 insert into interest_manager.interestratepaid ("WalletId", "Symbol", "Date", "Amount", "State", "TransactionId", "HistoryId")

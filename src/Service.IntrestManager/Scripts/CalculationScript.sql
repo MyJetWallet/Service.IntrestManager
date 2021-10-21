@@ -32,8 +32,7 @@ select "WalletId", "Symbol", "NewBalance" from
         order by "Timestamp" desc
     ) t
 where t.rank = 1
-  and t."NewBalance" > 0
-  and "WalletId" != 'SP-BrokerInterest';
+  and t."NewBalance" > 0;
 
 -- stage 1
 insert into temp_calculation
@@ -89,8 +88,8 @@ insert into interest_manager.calculationhistory ("CalculationDate", "CompletedDa
 values ((timestamp '${dateArg}'),
         (select current_timestamp at time zone 'utc'),
         (select count(distinct WalletId) from temp_calculation),
-        (select balanceInUsd from temp_calculation_report),
-        (select amountInUsd from temp_calculation_report),
+        (COALESCE((select balanceInUsd from temp_calculation_report), 0)),
+        (COALESCE((select amountInUsd from temp_calculation_report), 0)),
         (select json_agg(interestratesettings) from interest_manager.interestratesettings));
 
 -- calculation
