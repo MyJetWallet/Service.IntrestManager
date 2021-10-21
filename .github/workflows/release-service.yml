@@ -54,9 +54,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         path: ./publish-job
         registry: docker.pkg.github.com
-        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager.job
+        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager-job
         tag_with_ref: true
-        build_args: app_version=myjetwallet.service.intrestmanager.job:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanager-job:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
     - name: Publish image API
       uses: docker/build-push-action@v1
@@ -65,9 +65,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         path: ./publish-api
         registry: docker.pkg.github.com
-        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager.api
+        repository: ${{ secrets.ORG_NAME }}/service.intrestmanager/myjetwallet.service.intrestmanager-api
         tag_with_ref: true
-        build_args: app_version=myjetwallet.service.intrestmanager.api:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanager-api:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
     - name: Publish image ST JOB
       uses: docker/build-push-action@v1
@@ -76,9 +76,9 @@ jobs:
         password: ${{ secrets.ST_DOCKER_PASSWORD }}
         path: ./publish-job
         registry: simpletrading.azurecr.io
-        repository: spot/myjetwallet.service.intrestmanager.job
+        repository: spot/myjetwallet.service.intrestmanager-job
         tag_with_ref: true
-        build_args: app_version=myjetwallet.service.intrestmanager.job:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanager-job:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
     - name: Publish image ST API
       uses: docker/build-push-action@v1
@@ -87,9 +87,9 @@ jobs:
         password: ${{ secrets.ST_DOCKER_PASSWORD }}
         path: ./publish-api
         registry: simpletrading.azurecr.io
-        repository: spot/myjetwallet.service.intrestmanager.api
+        repository: spot/myjetwallet.service.intrestmanager-api
         tag_with_ref: true
-        build_args: app_version=myjetwallet.service.intrestmanager.api:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.intrestmanager-api:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
 
   update_version:
@@ -103,22 +103,22 @@ jobs:
         ref: uat        
         token: ${{ secrets.UAT_GIT_TOKEN }}
     - run: |
-        pattern=myjetwallet.service.intrestmanager.job:.*$
-        imagename=myjetwallet.service.intrestmanager.job:${GITHUB_REF#refs/tags/}
+        pattern=myjetwallet.service.intrestmanager-job:.*$
+        imagename=myjetwallet.service.intrestmanager-job:${GITHUB_REF#refs/tags/}
         reg=$"s/${pattern}/${imagename}/g"
         echo $reg
         find . -type f -name "deployment.*" -print0 -exec sed -i -r $reg {} \;
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git commit -a -m "Update version of service myjetwallet.service.intrestmanager.job"
+        git commit -a -m "Update version of service myjetwallet.service.intrestmanager-job"
         git push
     - run: |
-        pattern=myjetwallet.service.intrestmanager.api:.*$
-        imagename=myjetwallet.service.intrestmanager.api:${GITHUB_REF#refs/tags/}
+        pattern=myjetwallet.service.intrestmanager-api:.*$
+        imagename=myjetwallet.service.intrestmanager-api:${GITHUB_REF#refs/tags/}
         reg=$"s/${pattern}/${imagename}/g"
         echo $reg
         find . -type f -name "deployment.*" -print0 -exec sed -i -r $reg {} \;
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git commit -a -m "Update version of service myjetwallet.service.intrestmanager.api"
+        git commit -a -m "Update version of service myjetwallet.service.intrestmanager-api"
         git push
