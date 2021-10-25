@@ -8,3 +8,4 @@
 
 *Client library:* ![Nuget version](https://img.shields.io/nuget/v/MyJetWallet.Service.IntrestManager.Client?label=MyJetWallet.Service.IntrestManager.Client&style=social)
 
+
