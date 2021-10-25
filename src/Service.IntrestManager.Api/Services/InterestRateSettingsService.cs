@@ -45,6 +45,11 @@ namespace Service.IntrestManager.Api.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.InterestRateSettings.Asset))
+                {
+                    request.InterestRateSettings.RangeFrom = 0;
+                    request.InterestRateSettings.RangeTo = 0;
+                }
                 await _interestRateSettingsStorage.UpsertSettings(request.InterestRateSettings);
                 
                 return new UpsertInterestRateSettingsResponse()
