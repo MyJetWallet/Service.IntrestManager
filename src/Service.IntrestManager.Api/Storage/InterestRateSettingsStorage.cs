@@ -56,19 +56,89 @@ namespace Service.IntrestManager.Api.Storage
             }
         }
 
-        public async Task UpsertSettings(InterestRateSettings settings)
+        public async Task<string> UpsertSettings(InterestRateSettings settings)
         {
             try
             {
-                await using var ctx = _contextFactory.Create();
-                await ctx.UpsertSettings(settings);
-
-                await SyncSettings();
+                var validateResult = await GetValidateResult(settings);
+                switch (validateResult)
+                {
+                    case SettingsValidateResult.Ok:
+                    {
+                        await using var ctx = _contextFactory.Create();
+                        await ctx.UpsertSettings(settings);
+                        await SyncSettings();
+                        return string.Empty;
+                    }
+                    case SettingsValidateResult.CrossedRangeError:
+                        return "CrossedRangeError";
+                    case SettingsValidateResult.DoubleWalletSettingsError:
+                        return "DoubleWalletSettingsError";
+                    default:
+                        return "Smth wrong in InterestRateSettingsStorage.UpsertSettings";
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
+                return ex.Message;
             }
+        }
+
+        private async Task<SettingsValidateResult> GetValidateResult(InterestRateSettings settings)
+        {
+            await using var ctx = _contextFactory.Create();
+            var settingsCollection = ctx.GetSettings();
+
+            if (!string.IsNullOrWhiteSpace(settings.Asset) &&
+                !string.IsNullOrWhiteSpace(settings.WalletId))
+            {
+                var settingsWithWalletAndAsset = settingsCollection
+                    .Where(e => e.Asset == settings.Asset && e.WalletId == settings.WalletId)
+                    .ToList();
+
+                if (settingsWithWalletAndAsset.Any())
+                {
+                    var settingsInRange = settingsWithWalletAndAsset
+                        .Where(e => (settings.RangeFrom > e.RangeFrom && settings.RangeFrom < e.RangeTo) ||
+                                    (settings.RangeTo > e.RangeFrom && settings.RangeTo < e.RangeTo) ||
+                                    (settings.RangeFrom < e.RangeFrom && settings.RangeTo > e.RangeTo));
+                    if (settingsInRange.Any())
+                    {
+                        return SettingsValidateResult.CrossedRangeError;
+                    }
+                }
+            }
+            if (string.IsNullOrWhiteSpace(settings.Asset))
+            {
+                var clone = settingsCollection
+                    .FirstOrDefault(e => e.WalletId == settings.WalletId &&
+                                         (string.IsNullOrWhiteSpace(e.Asset) || e.Asset == null));
+                if (clone != null)
+                {
+                    return SettingsValidateResult.DoubleWalletSettingsError;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(settings.WalletId))
+            {
+                var settingsWithAsset = settingsCollection
+                    .Where(e => e.Asset == settings.Asset &&
+                                (string.IsNullOrWhiteSpace(e.WalletId) || e.WalletId == null))
+                    .ToList();
+
+                if (settingsWithAsset.Any())
+                {
+                    var settingsInRange = settingsWithAsset
+                        .Where(e => (settings.RangeFrom > e.RangeFrom && settings.RangeFrom < e.RangeTo) ||
+                                    (settings.RangeTo > e.RangeFrom && settings.RangeTo < e.RangeTo) ||
+                                    (settings.RangeFrom < e.RangeFrom && settings.RangeTo > e.RangeTo));
+                    if (settingsInRange.Any())
+                    {
+                        return SettingsValidateResult.CrossedRangeError;
+                    }
+                }
+            }
+            return SettingsValidateResult.Ok;
         }
 
         public async Task RemoveSettings(InterestRateSettings settings)
@@ -85,5 +155,12 @@ namespace Service.IntrestManager.Api.Storage
                 _logger.LogError(ex, ex.Message);
             }
         }
+    }
+
+    public enum SettingsValidateResult
+    {
+        Ok,
+        DoubleWalletSettingsError,
+        CrossedRangeError
     }
 }

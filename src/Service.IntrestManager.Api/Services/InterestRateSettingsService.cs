@@ -59,8 +59,16 @@ namespace Service.IntrestManager.Api.Services
                     request.InterestRateSettings.RangeFrom = 0;
                     request.InterestRateSettings.RangeTo = 0;
                 }
-                await _interestRateSettingsStorage.UpsertSettings(request.InterestRateSettings);
-                
+                var result = await _interestRateSettingsStorage.UpsertSettings(request.InterestRateSettings);
+
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    return new UpsertInterestRateSettingsResponse()
+                    {
+                        Success = false,
+                        ErrorMessage = result
+                    };
+                }
                 return new UpsertInterestRateSettingsResponse()
                 {
                     Success = true

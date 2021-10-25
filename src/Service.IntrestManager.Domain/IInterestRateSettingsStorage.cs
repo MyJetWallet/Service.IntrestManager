@@ -7,7 +7,7 @@ namespace Service.IntrestManager.Domain
     public interface IInterestRateSettingsStorage
     {
         Task<List<InterestRateSettings>> GetSettings();
-        Task UpsertSettings(InterestRateSettings settings);
+        Task<string> UpsertSettings(InterestRateSettings settings);
         Task RemoveSettings(InterestRateSettings settings);
         Task SyncSettings();
     }
