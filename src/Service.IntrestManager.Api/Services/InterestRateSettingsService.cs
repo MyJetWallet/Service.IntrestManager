@@ -45,6 +45,15 @@ namespace Service.IntrestManager.Api.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.InterestRateSettings.Asset) &&
+                    string.IsNullOrWhiteSpace(request.InterestRateSettings.WalletId))
+                {
+                    return new UpsertInterestRateSettingsResponse()
+                    {
+                        Success = false,
+                        ErrorMessage = "Wallet and asset cannot be empty."
+                    };
+                }
                 if (string.IsNullOrWhiteSpace(request.InterestRateSettings.Asset))
                 {
                     request.InterestRateSettings.RangeFrom = 0;
