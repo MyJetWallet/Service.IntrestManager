@@ -60,6 +60,16 @@ namespace Service.IntrestManager.Api.Storage
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(settings.Asset) &&
+                    string.IsNullOrWhiteSpace(settings.WalletId))
+                {
+                    return "Wallet and asset cannot be empty.";
+                }
+                if (string.IsNullOrWhiteSpace(settings.Asset))
+                {
+                    settings.RangeFrom = 0;
+                    settings.RangeTo = 0;
+                }
                 var validateResult = settings.Id == 0 
                     ? await GetValidateResult(settings)
                     : SettingsValidateResult.Ok;
@@ -84,6 +94,40 @@ namespace Service.IntrestManager.Api.Storage
             {
                 _logger.LogError(ex, ex.Message);
                 return ex.Message;
+            }
+        }
+
+        public async Task UpsertSettingsList(List<InterestRateSettings> settingsList)
+        {
+            try
+            {
+                foreach (var settings in settingsList)
+                {
+                    if (string.IsNullOrWhiteSpace(settings.Asset) &&
+                        string.IsNullOrWhiteSpace(settings.WalletId))
+                    {
+                        settingsList.Remove(settings);
+                    }
+                    if (string.IsNullOrWhiteSpace(settings.Asset))
+                    {
+                        settings.RangeFrom = 0;
+                        settings.RangeTo = 0;
+                    }
+                    var validateResult = settings.Id == 0 
+                        ? await GetValidateResult(settings)
+                        : SettingsValidateResult.Ok;
+                    if (validateResult != SettingsValidateResult.Ok)
+                    {
+                        settingsList.Remove(settings);
+                    }
+                }
+                await using var ctx = _contextFactory.Create();
+                await ctx.UpsertSettingsList(settingsList);
+                await SyncSettings();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
             }
         }
 

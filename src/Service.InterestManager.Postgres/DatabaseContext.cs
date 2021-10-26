@@ -276,6 +276,13 @@ namespace Service.InterestManager.Postrges
                 .On(e => new {e.WalletId, e.Asset, e.RangeFrom, e.RangeTo})
                 .RunAsync();
         }
+        public async Task UpsertSettingsList(List<InterestRateSettings> settingsList)
+        {
+            await InterestRateSettingsCollection
+                .UpsertRange(settingsList)
+                .On(e => new {e.WalletId, e.Asset, e.RangeFrom, e.RangeTo})
+                .RunAsync();
+        }
         public async Task RemoveSettings(InterestRateSettings settings)
         {
             var entity = InterestRateSettingsCollection

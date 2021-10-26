@@ -12,6 +12,8 @@ namespace Service.IntrestManager.Grpc
         [OperationContract]
         Task<UpsertInterestRateSettingsResponse> UpsertInterestRateSettingsAsync(UpsertInterestRateSettingsRequest request);
         [OperationContract]
+        Task<UpsertInterestRateSettingsListResponse> UpsertInterestRateSettingsListAsync(UpsertInterestRateSettingsListRequest request);
+        [OperationContract]
         Task<RemoveInterestRateSettingsResponse> RemoveInterestRateSettingsAsync(RemoveInterestRateSettingsRequest request);
         [OperationContract]
         Task<SyncDbAndNoSqlResponse> SyncDbAndNoSqlAsync();

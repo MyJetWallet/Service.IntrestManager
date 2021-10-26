@@ -45,20 +45,6 @@ namespace Service.IntrestManager.Api.Services
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.InterestRateSettings.Asset) &&
-                    string.IsNullOrWhiteSpace(request.InterestRateSettings.WalletId))
-                {
-                    return new UpsertInterestRateSettingsResponse()
-                    {
-                        Success = false,
-                        ErrorMessage = "Wallet and asset cannot be empty."
-                    };
-                }
-                if (string.IsNullOrWhiteSpace(request.InterestRateSettings.Asset))
-                {
-                    request.InterestRateSettings.RangeFrom = 0;
-                    request.InterestRateSettings.RangeTo = 0;
-                }
                 var result = await _interestRateSettingsStorage.UpsertSettings(request.InterestRateSettings);
 
                 if (!string.IsNullOrWhiteSpace(result))
@@ -78,6 +64,28 @@ namespace Service.IntrestManager.Api.Services
             {
                 _logger.LogError(ex, ex.Message);
                 return new UpsertInterestRateSettingsResponse()
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<UpsertInterestRateSettingsListResponse> UpsertInterestRateSettingsListAsync(UpsertInterestRateSettingsListRequest request)
+        {
+            try
+            {
+                await _interestRateSettingsStorage.UpsertSettingsList(request.InterestRateSettings);
+
+                return new UpsertInterestRateSettingsListResponse()
+                {
+                    Success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new UpsertInterestRateSettingsListResponse()
                 {
                     Success = false,
                     ErrorMessage = ex.Message
