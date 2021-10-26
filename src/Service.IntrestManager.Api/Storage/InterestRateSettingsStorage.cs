@@ -69,6 +69,11 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.RangeFrom = 0;
                     settings.RangeTo = 0;
+                    settings.Asset = string.Empty;
+                }
+                if (string.IsNullOrWhiteSpace(settings.WalletId))
+                {
+                    settings.WalletId = string.Empty;
                 }
                 var validateResult = settings.Id == 0 
                     ? await GetValidateResult(settings)
@@ -112,6 +117,11 @@ namespace Service.IntrestManager.Api.Storage
                     {
                         settings.RangeFrom = 0;
                         settings.RangeTo = 0;
+                        settings.Asset = string.Empty;
+                    }
+                    if (string.IsNullOrWhiteSpace(settings.WalletId))
+                    {
+                        settings.WalletId = string.Empty;
                     }
                     var validateResult = settings.Id == 0 
                         ? await GetValidateResult(settings)
