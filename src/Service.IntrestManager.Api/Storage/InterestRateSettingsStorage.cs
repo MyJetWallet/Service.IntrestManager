@@ -60,7 +60,9 @@ namespace Service.IntrestManager.Api.Storage
         {
             try
             {
-                var validateResult = await GetValidateResult(settings);
+                var validateResult = settings.Id == 0 
+                    ? await GetValidateResult(settings)
+                    : SettingsValidateResult.Ok;
                 switch (validateResult)
                 {
                     case SettingsValidateResult.Ok:
