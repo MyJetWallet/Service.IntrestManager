@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using MyJetWallet.Sdk.ServiceBus;
 using MyNoSqlServer.Abstractions;
+using Newtonsoft.Json;
 using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
@@ -141,8 +142,7 @@ namespace Service.IntrestManager.Engines
                 interestRatePaid.ErrorMessage = $"Amount {interestRatePaid.Amount} for asset {interestRatePaid.Symbol} and wallet {interestRatePaid.WalletId} is too low.";
                 return;
             }
-            
-            var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(new PayInterestRateRequest()
+            var request = new PayInterestRateRequest()
             {
                 TransactionId = interestRatePaid.TransactionId,
                 ClientId = serviceConfig.ServiceClient,
@@ -153,8 +153,10 @@ namespace Service.IntrestManager.Engines
                 Comment = "Paid interest rate",
                 BrokerId = serviceConfig.ServiceBroker,
                 RequestSource = nameof(InterestProcessingEngine)
-            });
-
+            };
+            _logger.LogInformation("PushToGateway push message : {messageJson}", JsonConvert.SerializeObject(request));
+            
+            var processResponse = await _spotChangeBalanceService.PayInterestRateAsync(request);
             if (processResponse.Result)
             {
                 interestRatePaid.State = PaidState.Completed;
