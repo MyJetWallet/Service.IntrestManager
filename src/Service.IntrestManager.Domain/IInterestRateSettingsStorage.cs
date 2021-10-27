@@ -8,7 +8,7 @@ namespace Service.IntrestManager.Domain
     {
         Task<List<InterestRateSettings>> GetSettings();
         Task<string> UpsertSettings(InterestRateSettings settings);
-        Task UpsertSettingsList(List<InterestRateSettings> settingsList);
+        Task<List<SettingsValidationResult>> UpsertSettingsList(List<InterestRateSettings> settingsList);
         Task RemoveSettings(InterestRateSettings settings);
         Task SyncSettings();
     }

@@ -77,19 +77,19 @@ namespace Service.IntrestManager.Api.Storage
                 }
                 var validateResult = settings.Id == 0 
                     ? await GetValidateResult(settings)
-                    : SettingsValidateResult.Ok;
+                    : SettingsValidationResultEnum.Ok;
                 switch (validateResult)
                 {
-                    case SettingsValidateResult.Ok:
+                    case SettingsValidationResultEnum.Ok:
                     {
                         await using var ctx = _contextFactory.Create();
                         await ctx.UpsertSettings(settings);
                         await SyncSettings();
                         return string.Empty;
                     }
-                    case SettingsValidateResult.CrossedRangeError:
+                    case SettingsValidationResultEnum.CrossedRangeError:
                         return "CrossedRangeError";
-                    case SettingsValidateResult.DoubleWalletSettingsError:
+                    case SettingsValidationResultEnum.DoubleWalletSettingsError:
                         return "DoubleWalletSettingsError";
                     default:
                         return "Smth wrong in InterestRateSettingsStorage.UpsertSettings";
@@ -102,46 +102,47 @@ namespace Service.IntrestManager.Api.Storage
             }
         }
 
-        public async Task UpsertSettingsList(List<InterestRateSettings> settingsList)
+        public async Task<List<SettingsValidationResult>> UpsertSettingsList(List<InterestRateSettings> settingsList)
         {
-            try
+            var validationResult = new List<SettingsValidationResult>();
+            foreach (var settings in settingsList)
             {
-                foreach (var settings in settingsList)
+                if (string.IsNullOrWhiteSpace(settings.Asset) &&
+                    string.IsNullOrWhiteSpace(settings.WalletId))
                 {
-                    if (string.IsNullOrWhiteSpace(settings.Asset) &&
-                        string.IsNullOrWhiteSpace(settings.WalletId))
+                    validationResult.Add(new SettingsValidationResult()
                     {
-                        settingsList.Remove(settings);
-                    }
-                    if (string.IsNullOrWhiteSpace(settings.Asset))
-                    {
-                        settings.RangeFrom = 0;
-                        settings.RangeTo = 0;
-                        settings.Asset = string.Empty;
-                    }
-                    if (string.IsNullOrWhiteSpace(settings.WalletId))
-                    {
-                        settings.WalletId = string.Empty;
-                    }
-                    var validateResult = settings.Id == 0 
-                        ? await GetValidateResult(settings)
-                        : SettingsValidateResult.Ok;
-                    if (validateResult != SettingsValidateResult.Ok)
-                    {
-                        settingsList.Remove(settings);
-                    }
+                        InterestRateSettings = settings,
+                        ValidationResult = SettingsValidationResultEnum.WalletAndAssetCannotBeEmpty
+                    });
+                    continue;
                 }
+                if (string.IsNullOrWhiteSpace(settings.Asset))
+                {
+                    settings.RangeFrom = 0;
+                    settings.RangeTo = 0;
+                    settings.Asset = string.Empty;
+                }
+                if (string.IsNullOrWhiteSpace(settings.WalletId))
+                {
+                    settings.WalletId = string.Empty;
+                }
+                validationResult.Add(new SettingsValidationResult()
+                {
+                    InterestRateSettings = settings,
+                    ValidationResult = await GetValidateResult(settings)
+                });
+            }
+            if (validationResult.All(e => e.ValidationResult == SettingsValidationResultEnum.Ok))
+            {
                 await using var ctx = _contextFactory.Create();
                 await ctx.UpsertSettingsList(settingsList);
                 await SyncSettings();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
+            return validationResult;
         }
 
-        private async Task<SettingsValidateResult> GetValidateResult(InterestRateSettings settings)
+        private async Task<SettingsValidationResultEnum> GetValidateResult(InterestRateSettings settings)
         {
             await using var ctx = _contextFactory.Create();
             var settingsCollection = ctx.GetSettings();
@@ -150,7 +151,9 @@ namespace Service.IntrestManager.Api.Storage
                 !string.IsNullOrWhiteSpace(settings.WalletId))
             {
                 var settingsWithWalletAndAsset = settingsCollection
-                    .Where(e => e.Asset == settings.Asset && e.WalletId == settings.WalletId)
+                    .Where(e => e.Asset == settings.Asset &&
+                                e.WalletId == settings.WalletId &&
+                                e.Id != settings.Id)
                     .ToList();
 
                 if (settingsWithWalletAndAsset.Any())
@@ -161,7 +164,7 @@ namespace Service.IntrestManager.Api.Storage
                                     (settings.RangeFrom < e.RangeFrom && settings.RangeTo > e.RangeTo));
                     if (settingsInRange.Any())
                     {
-                        return SettingsValidateResult.CrossedRangeError;
+                        return SettingsValidationResultEnum.CrossedRangeError;
                     }
                 }
             }
@@ -169,19 +172,20 @@ namespace Service.IntrestManager.Api.Storage
             {
                 var clone = settingsCollection
                     .FirstOrDefault(e => e.WalletId == settings.WalletId &&
-                                         (string.IsNullOrWhiteSpace(e.Asset) || e.Asset == null));
+                                         (string.IsNullOrWhiteSpace(e.Asset) || e.Asset == null) &&
+                                         e.Id != settings.Id);
                 if (clone != null)
                 {
-                    return SettingsValidateResult.DoubleWalletSettingsError;
+                    return SettingsValidationResultEnum.DoubleWalletSettingsError;
                 }
             }
             if (string.IsNullOrWhiteSpace(settings.WalletId))
             {
                 var settingsWithAsset = settingsCollection
                     .Where(e => e.Asset == settings.Asset &&
-                                (string.IsNullOrWhiteSpace(e.WalletId) || e.WalletId == null))
+                                (string.IsNullOrWhiteSpace(e.WalletId) || e.WalletId == null) &&
+                                e.Id != settings.Id)
                     .ToList();
-
                 if (settingsWithAsset.Any())
                 {
                     var settingsInRange = settingsWithAsset
@@ -190,11 +194,11 @@ namespace Service.IntrestManager.Api.Storage
                                     (settings.RangeFrom < e.RangeFrom && settings.RangeTo > e.RangeTo));
                     if (settingsInRange.Any())
                     {
-                        return SettingsValidateResult.CrossedRangeError;
+                        return SettingsValidationResultEnum.CrossedRangeError;
                     }
                 }
             }
-            return SettingsValidateResult.Ok;
+            return SettingsValidationResultEnum.Ok;
         }
 
         public async Task RemoveSettings(InterestRateSettings settings)
@@ -211,12 +215,5 @@ namespace Service.IntrestManager.Api.Storage
                 _logger.LogError(ex, ex.Message);
             }
         }
-    }
-
-    public enum SettingsValidateResult
-    {
-        Ok,
-        DoubleWalletSettingsError,
-        CrossedRangeError
     }
 }

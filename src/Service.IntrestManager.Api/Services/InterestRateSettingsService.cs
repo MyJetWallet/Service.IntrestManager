@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Service.IntrestManager.Domain;
+using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
 
@@ -75,11 +77,12 @@ namespace Service.IntrestManager.Api.Services
         {
             try
             {
-                await _interestRateSettingsStorage.UpsertSettingsList(request.InterestRateSettings);
-
+                var validationResult = await _interestRateSettingsStorage.UpsertSettingsList(request.InterestRateSettings);
+                
                 return new UpsertInterestRateSettingsListResponse()
                 {
-                    Success = true
+                    Success = validationResult.All(e => e.ValidationResult == SettingsValidationResultEnum.Ok),
+                    ValidationResult = validationResult
                 };
             }
             catch (Exception ex)
