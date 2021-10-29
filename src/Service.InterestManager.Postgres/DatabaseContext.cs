@@ -349,7 +349,11 @@ namespace Service.InterestManager.Postrges
         {
             await InterestRatePaidCollection
                 .Where(e => e.Date == createdDate && e.State == PaidState.Failed)
-                .ForEachAsync(e => e.State = PaidState.Retry);
+                .ForEachAsync(e =>
+                {
+                    e.State = PaidState.Retry;
+                    e.TransactionId = Guid.NewGuid().ToString();
+                });
             await SaveChangesAsync();
         }
 
