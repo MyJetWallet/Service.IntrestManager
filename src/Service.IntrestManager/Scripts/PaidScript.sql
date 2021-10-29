@@ -21,7 +21,7 @@ CREATE TEMPORARY TABLE temp_paid_report
 insert into temp_paid (WalletId, Symbol, Date, Amount, State, TransactionId)
 select "WalletId", "Symbol", (select current_timestamp at time zone 'utc'), sum("Amount"), 1, uuid_generate_v4()
 from interest_manager.interestratecalculation
-where "Date" >= timestamp '${dateFrom}'
+where "Date" > timestamp '${dateFrom}'
   and "Date" <= timestamp '${dateTo}'
 group by "WalletId", "Symbol";
 
