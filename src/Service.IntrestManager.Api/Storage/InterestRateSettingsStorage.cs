@@ -109,6 +109,7 @@ namespace Service.IntrestManager.Api.Storage
             var validationResult = new List<SettingsValidationResult>();
             await using var ctx = _contextFactory.Create();
             var dbSettingsCollection = ctx.GetSettings();
+            var dbSettingsCollectionCopy = dbSettingsCollection.Select(InterestRateSettings.GetCopy).ToList();
             foreach (var settings in settingsList)
             {
                 if (string.IsNullOrWhiteSpace(settings.Asset) &&
@@ -131,16 +132,12 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.WalletId = string.Empty;
                 }
-
-                var newSettingsWithoutCurrent = settingsList.Where(e => e != settings);
-                var allSettingsWithoutCurrent = dbSettingsCollection.Select(InterestRateSettings.GetCopy).ToList();
-                allSettingsWithoutCurrent.AddRange(newSettingsWithoutCurrent);
-                
                 validationResult.Add(new SettingsValidationResult()
                 {
                     InterestRateSettings = settings,
-                    ValidationResult = await GetValidateResult(settings, allSettingsWithoutCurrent)
+                    ValidationResult = await GetValidateResult(settings, dbSettingsCollectionCopy)
                 });
+                dbSettingsCollectionCopy.Add(settings);
             }
             if (validationResult.All(e => e.ValidationResult == SettingsValidationResultEnum.Ok))
             {
