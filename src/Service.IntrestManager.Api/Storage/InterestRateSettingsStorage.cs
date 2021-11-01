@@ -132,11 +132,12 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.WalletId = string.Empty;
                 }
-                validationResult.Add(new SettingsValidationResult()
+                var validationEntity = new SettingsValidationResult()
                 {
                     InterestRateSettings = settings,
                     ValidationResult = await GetValidateResult(settings, dbSettingsCollectionCopy)
-                });
+                };
+                validationResult.Add(validationEntity);
                 dbSettingsCollectionCopy.Add(settings);
             }
             if (validationResult.All(e => e.ValidationResult == SettingsValidationResultEnum.Ok))
@@ -156,7 +157,8 @@ namespace Service.IntrestManager.Api.Storage
                 var settingsWithWalletAndAsset = settingsCollection
                     .Where(e => e.Asset == settings.Asset &&
                                 e.WalletId == settings.WalletId &&
-                                e.Id != settings.Id)
+                                (e.Id != settings.Id ||
+                                 e.Id == 0))
                     .ToList();
 
                 if (settingsWithWalletAndAsset.Any())
@@ -176,7 +178,8 @@ namespace Service.IntrestManager.Api.Storage
                 var clone = settingsCollection
                     .FirstOrDefault(e => e.WalletId == settings.WalletId &&
                                          (string.IsNullOrWhiteSpace(e.Asset) || e.Asset == null) &&
-                                         e.Id != settings.Id);
+                                         (e.Id != settings.Id ||
+                                          e.Id == 0));
                 if (clone != null)
                 {
                     return SettingsValidationResultEnum.DoubleWalletSettingsError;
@@ -187,7 +190,8 @@ namespace Service.IntrestManager.Api.Storage
                 var settingsWithAsset = settingsCollection
                     .Where(e => e.Asset == settings.Asset &&
                                 (string.IsNullOrWhiteSpace(e.WalletId) || e.WalletId == null) &&
-                                e.Id != settings.Id)
+                                (e.Id != settings.Id ||
+                                 e.Id == 0))
                     .ToList();
                 if (settingsWithAsset.Any())
                 {
