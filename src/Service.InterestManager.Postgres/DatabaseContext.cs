@@ -190,7 +190,7 @@ namespace Service.InterestManager.Postrges
             }
             if (dateFilter != DateTime.MinValue)
             {
-                paid = paid.Where(e => e.Date == dateFilter.AddDays(1).Date.AddSeconds(-1));
+                paid = paid.Where(e => e.Date.Date == dateFilter.Date);
             }
             if (stateFilter != PaidState.Undefined)
             {
@@ -225,7 +225,7 @@ namespace Service.InterestManager.Postrges
             }
             if (dateFilter != DateTime.MinValue)
             {
-                calculations = calculations.Where(e => e.Date == dateFilter.AddDays(1).Date.AddSeconds(-1));
+                calculations = calculations.Where(e => e.Date.Date == dateFilter.Date);
             }
             if (historyFilter != 0)
             {
