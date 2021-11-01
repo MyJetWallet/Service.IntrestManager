@@ -75,14 +75,16 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.WalletId = string.Empty;
                 }
+                await using var ctx = _contextFactory.Create();
+                var dbSettingsCollection = ctx.GetSettings();
+                
                 var validateResult = settings.Id == 0 
-                    ? await GetValidateResult(settings)
+                    ? await GetValidateResult(settings, dbSettingsCollection)
                     : SettingsValidationResultEnum.Ok;
                 switch (validateResult)
                 {
                     case SettingsValidationResultEnum.Ok:
                     {
-                        await using var ctx = _contextFactory.Create();
                         await ctx.UpsertSettings(settings);
                         await SyncSettings();
                         return string.Empty;
@@ -105,6 +107,8 @@ namespace Service.IntrestManager.Api.Storage
         public async Task<List<SettingsValidationResult>> UpsertSettingsList(List<InterestRateSettings> settingsList)
         {
             var validationResult = new List<SettingsValidationResult>();
+            await using var ctx = _contextFactory.Create();
+            var dbSettingsCollection = ctx.GetSettings();
             foreach (var settings in settingsList)
             {
                 if (string.IsNullOrWhiteSpace(settings.Asset) &&
@@ -127,26 +131,28 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.WalletId = string.Empty;
                 }
+
+                var newSettingsWithoutCurrent = settingsList.Where(e => e != settings);
+                var allSettingsWithoutCurrent = dbSettingsCollection.Select(InterestRateSettings.GetCopy).ToList();
+                allSettingsWithoutCurrent.AddRange(newSettingsWithoutCurrent);
+                
                 validationResult.Add(new SettingsValidationResult()
                 {
                     InterestRateSettings = settings,
-                    ValidationResult = await GetValidateResult(settings)
+                    ValidationResult = await GetValidateResult(settings, allSettingsWithoutCurrent)
                 });
             }
             if (validationResult.All(e => e.ValidationResult == SettingsValidationResultEnum.Ok))
             {
-                await using var ctx = _contextFactory.Create();
                 await ctx.UpsertSettingsList(settingsList);
                 await SyncSettings();
             }
             return validationResult;
         }
 
-        private async Task<SettingsValidationResultEnum> GetValidateResult(InterestRateSettings settings)
+        private async Task<SettingsValidationResultEnum> GetValidateResult(InterestRateSettings settings,
+            IReadOnlyCollection<InterestRateSettings> settingsCollection)
         {
-            await using var ctx = _contextFactory.Create();
-            var settingsCollection = ctx.GetSettings();
-
             if (!string.IsNullOrWhiteSpace(settings.Asset) &&
                 !string.IsNullOrWhiteSpace(settings.WalletId))
             {

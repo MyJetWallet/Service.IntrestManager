@@ -11,5 +11,18 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 4)] public decimal RangeFrom { get; set; }
         [DataMember(Order = 5)] public decimal RangeTo { get; set; }
         [DataMember(Order = 6)] public decimal Apy { get; set; }
+
+        public static InterestRateSettings GetCopy(InterestRateSettings interestRateSettings)
+        {
+            return new InterestRateSettings()
+            {
+                Id = interestRateSettings.Id,
+                WalletId = interestRateSettings.WalletId,
+                Asset = interestRateSettings.Asset,
+                RangeFrom = interestRateSettings.RangeFrom,
+                RangeTo = interestRateSettings.RangeTo,
+                Apy = interestRateSettings.Apy
+            };
+        }
     }
 }
