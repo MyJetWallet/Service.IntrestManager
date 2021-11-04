@@ -13,5 +13,6 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 5)] public double AmountInWalletsInUsd { get; set; }
         [DataMember(Order = 6)] public double CalculatedAmountInUsd { get; set; }
         [DataMember(Order = 7)] public string SettingsJson { get; set; }
+        [DataMember(Order = 8)] public DateTime LastTs { get; set; }
     }
 }

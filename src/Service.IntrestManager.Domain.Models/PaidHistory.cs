@@ -12,5 +12,6 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 4)] public DateTime RangeTo { get; set; }
         [DataMember(Order = 5)] public int WalletCount { get; set; }
         [DataMember(Order = 6)] public double TotalPaidInUsd { get; set; }
+        [DataMember(Order = 7)] public DateTime LastTs { get; set; }
     }
 }
