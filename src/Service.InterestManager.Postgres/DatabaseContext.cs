@@ -83,6 +83,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<CalculationHistory>().Property(e => e.SettingsJson);
             
             modelBuilder.Entity<CalculationHistory>().HasIndex(e => e.CompletedDate);
+
+            modelBuilder.Entity<CalculationHistory>().HasIndex(e => e.LastTs);
         }
 
         private void SetPaidHistoryEntity(ModelBuilder modelBuilder)
@@ -99,6 +101,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<PaidHistory>().Property(e => e.TotalPaidInUsd);
             
             modelBuilder.Entity<PaidHistory>().HasIndex(e => e.CreatedDate);
+
+            modelBuilder.Entity<PaidHistory>().HasIndex(e => e.LastTs);
         }
 
         private void SetInterestRatePaidEntity(ModelBuilder modelBuilder)
@@ -122,6 +126,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.Symbol);
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.State);
+
+            modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.LastTs);
         }
 
         private void SetInterestRateCalculationEntity(ModelBuilder modelBuilder)
@@ -143,6 +149,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol});
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.Symbol);
+
+            modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.LastTs);
         }
 
         private void SetInterestRateSettingsEntity(ModelBuilder modelBuilder)
@@ -162,6 +170,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset});
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.Asset);
+
+            modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.LastTs);
         }
 
         public async Task UpdateIndexPrice(IEnumerable<IndexPriceEntity> prices)
