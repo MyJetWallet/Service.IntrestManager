@@ -11,7 +11,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 3)] public string Asset { get; set; }
         [DataMember(Order = 4)] public decimal RangeFrom { get; set; }
         [DataMember(Order = 5)] public decimal RangeTo { get; set; }
-        [DataMember(Order = 6)] public decimal Apy { get; set; }
+        [DataMember(Order = 6)] public decimal Apr { get; set; }
         [DataMember(Order = 7)] public DateTime LastTs { get; set; }
         [DataMember(Order = 8)] public decimal DailyLimitInUsd { get; set; }
 
@@ -24,7 +24,7 @@ namespace Service.IntrestManager.Domain.Models
                 Asset = interestRateSettings.Asset,
                 RangeFrom = interestRateSettings.RangeFrom,
                 RangeTo = interestRateSettings.RangeTo,
-                Apy = interestRateSettings.Apy,
+                Apr = interestRateSettings.Apr,
                 DailyLimitInUsd = interestRateSettings.DailyLimitInUsd
             };
         }

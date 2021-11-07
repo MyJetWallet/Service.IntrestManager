@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -134,6 +135,7 @@ namespace Service.IntrestManager.Api.Logic
                     ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                     {
                         Asset = asset,
+                        Apr = 0,
                         Apy = 0
                     });
                 }
@@ -152,7 +154,8 @@ namespace Service.IntrestManager.Api.Logic
                 ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                 {
                     Asset = asset,
-                    Apy = settingByAssetAndEmptyWallet.First().Apy
+                    Apr = settingByAssetAndEmptyWallet.First().Apr,
+                    Apy = ConvertAprToApy(settingByAssetAndEmptyWallet.First().Apr)
                 });
             }
             else
@@ -191,7 +194,8 @@ namespace Service.IntrestManager.Api.Logic
                 ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                 {
                     Asset = asset,
-                    Apy = settingForWalletAndAsset.First().Apy
+                    Apr = settingForWalletAndAsset.First().Apr,
+                    Apy = ConvertAprToApy(settingForWalletAndAsset.First().Apr)
                 });
             }
             else
@@ -217,7 +221,8 @@ namespace Service.IntrestManager.Api.Logic
                     ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                     {
                         Asset = asset,
-                        Apy = s.Apy
+                        Apr = s.Apr,
+                        Apy = ConvertAprToApy(s.Apr)
                     });
                 }
             }
@@ -234,7 +239,8 @@ namespace Service.IntrestManager.Api.Logic
                     ratesByWallet.RateCollection.Add(new InterestRateByAsset()
                     {
                         Asset = asset,
-                        Apy = settingByWallet.Apy
+                        Apr = settingByWallet.Apr,
+                        Apy = ConvertAprToApy(settingByWallet.Apr)
                     });
                 }
             }
@@ -245,5 +251,10 @@ namespace Service.IntrestManager.Api.Logic
             _logger.LogInformation("ClearRates run in InterestRateByWalletGenerator");
             await _ratesWriter.CleanAndKeepMaxPartitions(0);
         }
+
+        private static decimal ConvertAprToApy(decimal apr)
+        {
+            return apr == 0 ? 0 : Convert.ToDecimal(100 * 100 * (Math.Pow(decimal.ToDouble(1 + (apr / (100 * 100)) / 365), 365) - 1));
+        } 
     }
 }
