@@ -165,6 +165,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().Property(e => e.RangeFrom);
             modelBuilder.Entity<InterestRateSettings>().Property(e => e.RangeTo);
             modelBuilder.Entity<InterestRateSettings>().Property(e => e.Apy);
+            modelBuilder.Entity<InterestRateSettings>().Property(e => e.DailyLimitInUsd);
             
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset, e.RangeFrom, e.RangeTo}).IsUnique();
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset});

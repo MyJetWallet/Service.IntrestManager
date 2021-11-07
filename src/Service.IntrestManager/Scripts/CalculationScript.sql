@@ -36,17 +36,20 @@ where t.rank = 1
 
 -- stage 1
 insert into temp_calculation
-select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
+select hd.*, s."Apy", least((hd."newbalance" * s."Apy" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
          join interest_manager.interestratesettings s
               on hd."walletid" = s."WalletId"
                   and hd."symbol" = s."Asset"
                   and (hd."newbalance" >= s."RangeFrom"
-                      and hd."newbalance" < s."RangeTo");
+                      and hd."newbalance" < s."RangeTo")
+         join interest_manager.indexprice as p
+              on hd."symbol" = p."Asset" 
+                     and p."PriceInUsd" > 0;
 
 -- stage 2
 insert into temp_calculation
-select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
+select hd.*, s."Apy", least((hd."newbalance" * s."Apy" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
          join interest_manager.interestratesettings s
               on hd."walletid" = s."WalletId"
@@ -56,11 +59,14 @@ from temp_new_balances hd
          left join temp_calculation tc
                    on hd."symbol" = tc.Symbol
                        and hd."walletid" = tc.WalletId
+         join interest_manager.indexprice as p
+              on hd."symbol" = p."Asset"
+                  and p."PriceInUsd" > 0
 where tc.WalletId IS NULL;
 
 -- stage 3
 insert into temp_calculation
-select hd.*, s."Apy", (hd."newbalance" * s."Apy" / 100)/365 "Amount", timestamp '${dateArg}'
+select hd.*, s."Apy", least((hd."newbalance" * s."Apy" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
          join interest_manager.interestratesettings s
               on (s."WalletId" = '' OR s."WalletId" IS NULL)
@@ -70,6 +76,9 @@ from temp_new_balances hd
          left join temp_calculation tc
                    on hd."symbol" = tc.Symbol
                        and hd."walletid" = tc.WalletId
+         join interest_manager.indexprice as p
+              on hd."symbol" = p."Asset"
+                  and p."PriceInUsd" > 0
 where tc.WalletId IS NULL;
 
 delete from interest_manager.interestratecalculation

@@ -13,6 +13,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 5)] public decimal RangeTo { get; set; }
         [DataMember(Order = 6)] public decimal Apy { get; set; }
         [DataMember(Order = 7)] public DateTime LastTs { get; set; }
+        [DataMember(Order = 8)] public decimal DailyLimitInUsd { get; set; }
 
         public static InterestRateSettings GetCopy(InterestRateSettings interestRateSettings)
         {
@@ -23,7 +24,8 @@ namespace Service.IntrestManager.Domain.Models
                 Asset = interestRateSettings.Asset,
                 RangeFrom = interestRateSettings.RangeFrom,
                 RangeTo = interestRateSettings.RangeTo,
-                Apy = interestRateSettings.Apy
+                Apy = interestRateSettings.Apy,
+                DailyLimitInUsd = interestRateSettings.DailyLimitInUsd
             };
         }
     }
