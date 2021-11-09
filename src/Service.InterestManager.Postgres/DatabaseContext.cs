@@ -140,7 +140,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.WalletId).HasMaxLength(64);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Symbol).HasMaxLength(64);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.NewBalance);
-            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Apy);
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Apr);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Amount);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Date);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.HistoryId);

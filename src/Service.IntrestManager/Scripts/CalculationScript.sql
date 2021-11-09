@@ -36,7 +36,7 @@ where t.rank = 1
 
 -- stage 1
 insert into temp_calculation
-select hd.*, s."Apr", least((hd."newbalance" * s."Apr" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") "Amount", timestamp '${dateArg}'
+select hd.*, s."Apr", case when s."DailyLimitInUsd" > 0 then least((hd."newbalance" * s."Apr" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") else (hd."newbalance" * s."Apr" / 100)/365 end "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
          join interest_manager.interestratesettings s
               on hd."walletid" = s."WalletId"
@@ -49,7 +49,7 @@ from temp_new_balances hd
 
 -- stage 2
 insert into temp_calculation
-select hd.*, s."Apr", least((hd."newbalance" * s."Apr" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") "Amount", timestamp '${dateArg}'
+select hd.*, s."Apr", case when s."DailyLimitInUsd" > 0 then least((hd."newbalance" * s."Apr" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") else (hd."newbalance" * s."Apr" / 100)/365 end "Amount", timestamp '${dateArg}'
 from temp_new_balances hd
          join interest_manager.interestratesettings s
               on hd."walletid" = s."WalletId"
@@ -66,7 +66,7 @@ where tc.WalletId IS NULL;
 
 -- stage 3
 insert into temp_calculation
-select hd.*, s."Apr", least((hd."newbalance" * s."Apr" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") "Amount", timestamp '${dateArg}'
+select hd.*, s."Apr", case when s."DailyLimitInUsd" > 0 then least((hd."newbalance" * s."Apr" / 100)/365, s."DailyLimitInUsd" / p."PriceInUsd") else (hd."newbalance" * s."Apr" / 100)/365 end "DailyLimit", timestamp '${dateArg}'
 from temp_new_balances hd
          join interest_manager.interestratesettings s
               on (s."WalletId" = '' OR s."WalletId" IS NULL)
@@ -102,7 +102,7 @@ values ((timestamp '${dateArg}'),
         (select json_agg(interestratesettings) from interest_manager.interestratesettings));
 
 -- calculation
-insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apy", "Amount", "Date", "HistoryId")
+insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apr", "Amount", "Date", "HistoryId")
 select walletid,
        symbol,
        newbalance,

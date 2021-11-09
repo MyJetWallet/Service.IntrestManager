@@ -10,7 +10,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 2)] public string WalletId { get; set; }
         [DataMember(Order = 3)] public string Symbol { get; set; }
         [DataMember(Order = 4)] public decimal NewBalance { get; set; }
-        [DataMember(Order = 5)] public decimal Apy { get; set; }
+        [DataMember(Order = 5)] public decimal Apr { get; set; }
         [DataMember(Order = 6)] public decimal Amount { get; set; }
         [DataMember(Order = 7)] public DateTime Date { get; set; }
         [DataMember(Order = 8)] public long HistoryId { get; set; }
