@@ -7,7 +7,7 @@ using Service.IntrestManager.Engines;
 
 namespace Service.IntrestManager.Jobs
 {
-    public class InterestManagerJob : IStartable
+    public class InterestManagerJob
     {
         private readonly ILogger<InterestManagerJob> _logger;
         private readonly MyTaskTimer _timer;

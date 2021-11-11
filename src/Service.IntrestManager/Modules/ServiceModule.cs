@@ -18,8 +18,8 @@ namespace Service.IntrestManager.Modules
 
             builder
                 .RegisterType<InterestManagerJob>()
-                .As<IStartable>()
                 .AutoActivate()
+                .AsSelf()
                 .SingleInstance();
             
             builder
