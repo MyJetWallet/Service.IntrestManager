@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -155,7 +154,7 @@ namespace Service.IntrestManager.Api.Logic
                 {
                     Asset = asset,
                     Apr = settingByAssetAndEmptyWallet.First().Apr,
-                    Apy = ConvertAprToApy(settingByAssetAndEmptyWallet.First().Apr)
+                    Apy = settingByAssetAndEmptyWallet.First().Apy
                 });
             }
             else
@@ -195,7 +194,7 @@ namespace Service.IntrestManager.Api.Logic
                 {
                     Asset = asset,
                     Apr = settingForWalletAndAsset.First().Apr,
-                    Apy = ConvertAprToApy(settingForWalletAndAsset.First().Apr)
+                    Apy = settingForWalletAndAsset.First().Apy
                 });
             }
             else
@@ -222,7 +221,7 @@ namespace Service.IntrestManager.Api.Logic
                     {
                         Asset = asset,
                         Apr = s.Apr,
-                        Apy = ConvertAprToApy(s.Apr)
+                        Apy = s.Apy
                     });
                 }
             }
@@ -240,7 +239,7 @@ namespace Service.IntrestManager.Api.Logic
                     {
                         Asset = asset,
                         Apr = settingByWallet.Apr,
-                        Apy = ConvertAprToApy(settingByWallet.Apr)
+                        Apy = settingByWallet.Apy
                     });
                 }
             }
@@ -251,10 +250,5 @@ namespace Service.IntrestManager.Api.Logic
             _logger.LogInformation("ClearRates run in InterestRateByWalletGenerator");
             await _ratesWriter.CleanAndKeepMaxPartitions(0);
         }
-
-        private static decimal ConvertAprToApy(decimal apr)
-        {
-            return apr == 0 ? 0 : Convert.ToDecimal(100 * 100 * (Math.Pow(decimal.ToDouble(1 + (apr / (100 * 100)) / 365), 365) - 1));
-        } 
     }
 }
