@@ -38,7 +38,7 @@ namespace Service.IntrestManager.Domain.Models
 
         private static decimal ConvertAprToApy(decimal apr)
         {
-            return apr == 0 ? 0 : Convert.ToDecimal(100 * 100 * (Math.Pow(decimal.ToDouble(1 + (apr / (100 * 100)) / 365), 365) - 1));
+            return apr == 0 ? 0 : decimal.Round(Convert.ToDecimal(100 * (Math.Pow(decimal.ToDouble(1 + (apr / 100) / 365), 365) - 1)), 2, MidpointRounding.ToZero);
         } 
     }
 }
