@@ -75,6 +75,7 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.WalletId = string.Empty;
                 }
+                settings.CalculateApy();
                 await using var ctx = _contextFactory.Create();
                 var dbSettingsCollection = ctx.GetSettings();
                 
@@ -132,6 +133,7 @@ namespace Service.IntrestManager.Api.Storage
                 {
                     settings.WalletId = string.Empty;
                 }
+                settings.CalculateApy();
                 var validationEntity = new SettingsValidationResult()
                 {
                     InterestRateSettings = settings,

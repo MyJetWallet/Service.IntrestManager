@@ -31,6 +31,11 @@ namespace Service.IntrestManager.Domain.Models
             };
         }
 
+        public void CalculateApy()
+        {
+            Apy = ConvertAprToApy(Apr);
+        }
+
         private static decimal ConvertAprToApy(decimal apr)
         {
             return apr == 0 ? 0 : Convert.ToDecimal(100 * 100 * (Math.Pow(decimal.ToDouble(1 + (apr / (100 * 100)) / 365), 365) - 1));
