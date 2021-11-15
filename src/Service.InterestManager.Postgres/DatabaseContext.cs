@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 using Flurl.Util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Postgres;
 using Service.IntrestManager.Domain.Models;
 
 namespace Service.InterestManager.Postrges
 {
-    public class DatabaseContext : DbContext
+    public class DatabaseContext : MyDbContext
     {
         public const string Schema = "interest_manager";
         
@@ -31,16 +32,7 @@ namespace Service.InterestManager.Postrges
         public DatabaseContext(DbContextOptions options) : base(options)
         {
         }
-        public static ILoggerFactory LoggerFactory { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (LoggerFactory != null)
-            {
-                optionsBuilder.UseLoggerFactory(LoggerFactory).EnableSensitiveDataLogging();
-            }
-        }
-        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema(Schema);
