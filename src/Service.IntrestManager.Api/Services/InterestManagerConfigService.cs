@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
-using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
@@ -14,12 +13,15 @@ namespace Service.IntrestManager.Api.Services
     {
         private readonly ILogger<InterestManagerConfigService> _logger;
         private readonly IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> _configWriter;
+        private readonly IInterestRateSettingsService _interestRateSettingsService;
 
         public InterestManagerConfigService(ILogger<InterestManagerConfigService> logger, 
-            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> configWriter)
+            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> configWriter, 
+            IInterestRateSettingsService interestRateSettingsService)
         {
             _logger = logger;
             _configWriter = configWriter;
+            _interestRateSettingsService = interestRateSettingsService;
         }
 
         public async Task<GetInterestManagerConfigResponse> GetInterestManagerConfigAsync()
@@ -49,6 +51,9 @@ namespace Service.IntrestManager.Api.Services
             try
             {
                 await _configWriter.InsertOrReplaceAsync(InterestManagerConfigNoSql.Create(request.Config));
+                var interestSettings = await _interestRateSettingsService.GetInterestRateSettingsAsync();
+                await _interestRateSettingsService.UpsertInterestRateSettingsListAsync(
+                    new UpsertInterestRateSettingsListRequest() { InterestRateSettings = interestSettings.InterestRateCollection });
                 
                 return new UpsertInterestManagerConfigResponse()
                 {

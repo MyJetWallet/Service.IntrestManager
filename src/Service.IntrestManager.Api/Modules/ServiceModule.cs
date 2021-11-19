@@ -2,10 +2,12 @@
 using MyJetWallet.Sdk.NoSql;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Api.Logic;
+using Service.IntrestManager.Api.Services;
 using Service.IntrestManager.Api.Storage;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Domain.Models.NoSql;
+using Service.IntrestManager.Grpc;
 
 namespace Service.IntrestManager.Api.Modules
 {
@@ -29,6 +31,10 @@ namespace Service.IntrestManager.Api.Modules
             builder
                 .RegisterType<InterestRateByWalletGenerator>()
                 .As<IInterestRateByWalletGenerator>()
+                .SingleInstance();
+            builder
+                .RegisterType<InterestRateSettingsService>()
+                .As<IInterestRateSettingsService>()
                 .SingleInstance();
         }
     }

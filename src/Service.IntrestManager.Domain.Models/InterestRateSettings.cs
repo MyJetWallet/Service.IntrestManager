@@ -27,18 +27,8 @@ namespace Service.IntrestManager.Domain.Models
                 RangeTo = interestRateSettings.RangeTo,
                 Apr = interestRateSettings.Apr,
                 DailyLimitInUsd = interestRateSettings.DailyLimitInUsd,
-                Apy = interestRateSettings.Apy > 0 ? interestRateSettings.Apy : ConvertAprToApy(interestRateSettings.Apr)
+                Apy = interestRateSettings.Apy
             };
         }
-
-        public void CalculateApy()
-        {
-            Apy = ConvertAprToApy(Apr);
-        }
-
-        private static decimal ConvertAprToApy(decimal apr)
-        {
-            return apr == 0 ? 0 : decimal.Round(Convert.ToDecimal(100 * (Math.Pow(decimal.ToDouble(1 + (apr / 100) / 365), 365) - 1)), 2, MidpointRounding.ToZero);
-        } 
     }
 }

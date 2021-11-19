@@ -1,24 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MyNoSqlServer.Abstractions;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
 
 namespace Service.IntrestManager.Api.Services
 {
-    public class InterestRateSettingsService: IInterestRateSettingsService
+    public class InterestRateSettingsService : IInterestRateSettingsService
     {
         private readonly ILogger<InterestRateSettingsService> _logger;
         private readonly IInterestRateSettingsStorage _interestRateSettingsStorage;
+        private readonly IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> _myNoSqlServerDataWriter;
 
-        public InterestRateSettingsService(ILogger<InterestRateSettingsService> logger, 
-            IInterestRateSettingsStorage interestRateSettingsStorage)
+        public InterestRateSettingsService(ILogger<InterestRateSettingsService> logger,
+            IInterestRateSettingsStorage interestRateSettingsStorage, 
+            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> myNoSqlServerDataWriter)
         {
             _logger = logger;
             _interestRateSettingsStorage = interestRateSettingsStorage;
+            _myNoSqlServerDataWriter = myNoSqlServerDataWriter;
         }
 
         public async Task<GetInterestRateSettingsResponse> GetInterestRateSettingsAsync()
@@ -43,10 +49,13 @@ namespace Service.IntrestManager.Api.Services
             }
         }
 
-        public async Task<UpsertInterestRateSettingsResponse> UpsertInterestRateSettingsAsync(UpsertInterestRateSettingsRequest request)
+        public async Task<UpsertInterestRateSettingsResponse> UpsertInterestRateSettingsAsync(
+            UpsertInterestRateSettingsRequest request)
         {
             try
             {
+                RecalculateApy(new List<InterestRateSettings> { request.InterestRateSettings },
+                    (await _myNoSqlServerDataWriter.GetAsync()).FirstOrDefault()?.Config?.PaidPeriod ?? PaidPeriod.Day);
                 var result = await _interestRateSettingsStorage.UpsertSettings(request.InterestRateSettings);
 
                 if (!string.IsNullOrWhiteSpace(result))
@@ -57,6 +66,7 @@ namespace Service.IntrestManager.Api.Services
                         ErrorMessage = result
                     };
                 }
+
                 return new UpsertInterestRateSettingsResponse()
                 {
                     Success = true
@@ -73,12 +83,16 @@ namespace Service.IntrestManager.Api.Services
             }
         }
 
-        public async Task<UpsertInterestRateSettingsListResponse> UpsertInterestRateSettingsListAsync(UpsertInterestRateSettingsListRequest request)
+        public async Task<UpsertInterestRateSettingsListResponse> UpsertInterestRateSettingsListAsync(
+            UpsertInterestRateSettingsListRequest request)
         {
             try
             {
-                var validationResult = await _interestRateSettingsStorage.UpsertSettingsList(request.InterestRateSettings);
-                
+                RecalculateApy(request.InterestRateSettings,
+                    (await _myNoSqlServerDataWriter.GetAsync()).FirstOrDefault()?.Config?.PaidPeriod ?? PaidPeriod.Day);
+                var validationResult =
+                    await _interestRateSettingsStorage.UpsertSettingsList(request.InterestRateSettings);
+
                 return new UpsertInterestRateSettingsListResponse()
                 {
                     Success = validationResult.All(e => e.ValidationResult == SettingsValidationResultEnum.Ok),
@@ -96,7 +110,8 @@ namespace Service.IntrestManager.Api.Services
             }
         }
 
-        public async Task<RemoveInterestRateSettingsResponse> RemoveInterestRateSettingsAsync(RemoveInterestRateSettingsRequest request)
+        public async Task<RemoveInterestRateSettingsResponse> RemoveInterestRateSettingsAsync(
+            RemoveInterestRateSettingsRequest request)
         {
             try
             {
@@ -137,6 +152,35 @@ namespace Service.IntrestManager.Api.Services
                     Success = false,
                     ErrorMessage = ex.Message
                 };
+            }
+        }
+
+        private void RecalculateApy(List<InterestRateSettings> settings, PaidPeriod paidPeriod)
+        {
+            double timesAppliedPerYear = 365;
+            switch (paidPeriod)
+            {
+                case PaidPeriod.Day:
+                    timesAppliedPerYear = 365;
+                    break;
+                case PaidPeriod.Week:
+                    timesAppliedPerYear = 365.0 / 7;
+                    break;
+                case PaidPeriod.Month:
+                    timesAppliedPerYear = 365.0 / 30;
+                    break;
+            }
+
+            foreach (var interestRateSettings in settings)
+            {
+                interestRateSettings.Apy = interestRateSettings.Apr == 0
+                    ? 0
+                    : decimal.Round(
+                        Convert.ToDecimal(100 *
+                                          (Math.Pow(
+                                               (1 + decimal.ToDouble(interestRateSettings.Apr) / 100 /
+                                                   timesAppliedPerYear), timesAppliedPerYear) -
+                                           1)), 2, MidpointRounding.ToZero);
             }
         }
     }
