@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -17,5 +18,8 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 2)] public decimal Apr { get; set; }
         [DataMember(Order = 3)] public decimal AccumulatedAmount { get; set; }
         [DataMember(Order = 4)] public decimal Apy { get; set; }
+        [DataMember(Order = 5)] public decimal TotalEarnAmount { get; set; }
+        [DataMember(Order = 6)] public decimal CurrentEarnAmount { get; set; }
+        [DataMember(Order = 7)] public DateTime NextPaymentDate { get; set; }
     }
 }

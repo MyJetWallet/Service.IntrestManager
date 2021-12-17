@@ -21,6 +21,7 @@ namespace Service.InterestManager.Postrges
         private const string CalculationHistoryTableName = "calculationhistory";
         private const string PaidHistoryTableName = "paidhistory";
         private const string IndexPriceTableName = "indexprice";
+        private const string InterestRateStateTableName = "interestratestate";
         
         private DbSet<InterestRateSettings> InterestRateSettingsCollection { get; set; }
         public DbSet<InterestRateCalculation> InterestRateCalculationCollection { get; set; }
@@ -28,7 +29,7 @@ namespace Service.InterestManager.Postrges
         public DbSet<CalculationHistory> CalculationHistoryCollection { get; set; }
         private DbSet<PaidHistory> PaidHistoryCollection { get; set; }
         private DbSet<IndexPriceEntity> IndexPriceCollection { get; set; }
-        
+        private DbSet<InterestRateState> InterestRateStates { get; set; }
         public DatabaseContext(DbContextOptions options) : base(options)
         {
         }
@@ -43,6 +44,7 @@ namespace Service.InterestManager.Postrges
             SetCalculationHistoryEntity(modelBuilder);
             SetPaidHistoryEntity(modelBuilder);
             SetIndexPriceEntity(modelBuilder);
+            SetInterestRateStatesEntity(modelBuilder);
             
             base.OnModelCreating(modelBuilder);
         }
@@ -167,6 +169,16 @@ namespace Service.InterestManager.Postrges
 
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.LastTs);
         }
+
+        private void SetInterestRateStatesEntity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<InterestRateState>().ToTable(InterestRateStateTableName);
+            
+            modelBuilder.Entity<InterestRateState>().HasKey(e => new {e.AssetId, e.WalletId});
+            modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
+
+        }
+        
 
         public async Task UpdateIndexPrice(IEnumerable<IndexPriceEntity> prices)
         {
@@ -348,6 +360,47 @@ namespace Service.InterestManager.Postrges
                 logger.LogError(ex, ex.Message);
             }
         }
+        
+        public async Task ExecCurrentCalculationAsync(DateTime date, ILogger logger)
+        {
+            try
+            {
+                var path = Path.Combine(Environment.CurrentDirectory, @"Scripts/", "CurrentCalculationScript.sql");
+                using var script =
+                    new StreamReader(path);
+                var scriptBody = await script.ReadToEndAsync();
+                var dateArg = $"{date.Year}-{date.Month.ToString().PadLeft(2, '0')}-{date.Day.ToString().PadLeft(2, '0')}" +
+                              $" {date.Hour.ToString().PadLeft(2, '0')}:{date.Minute.ToString().PadLeft(2, '0')}:{date.Second.ToString().PadLeft(2, '0')}";
+                var sqlText = scriptBody.Replace("${dateArg}", dateArg);
+
+                logger.LogInformation($"ExecStateCalculationAsync start with date {dateArg}");
+                await Database.ExecuteSqlRawAsync(sqlText);
+                logger.LogInformation($"ExecStateCalculationAsync finish with date {dateArg}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+        }
+        
+        public async Task ExecTotalCalculationAsync(ILogger logger)
+        {
+            try
+            {
+                var path = Path.Combine(Environment.CurrentDirectory, @"Scripts/", "TotalCalculationScript.sql");
+                using var script =
+                    new StreamReader(path);
+                var scriptBody = await script.ReadToEndAsync();
+
+                logger.LogInformation($"ExecTotalCalculationAsync start");
+                await Database.ExecuteSqlRawAsync(scriptBody);
+                logger.LogInformation($"ExecTotalCalculationAsync finish");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+        }
 
         public async Task RetryPaidPeriod(DateTime createdDate)
         {
@@ -384,6 +437,12 @@ namespace Service.InterestManager.Postrges
             });
 
             return ratesDictionary;
+        }
+
+        public async Task<Dictionary<string, (decimal current, decimal total)>> GetEarnStates(string walletId)
+        {
+           return await InterestRateStates.Where(t => t.WalletId == walletId)
+                .ToDictionaryAsync(t => t.AssetId, t => (t.CurrentEarnAmount, t.TotalEarnAmount));
         }
     }
 }

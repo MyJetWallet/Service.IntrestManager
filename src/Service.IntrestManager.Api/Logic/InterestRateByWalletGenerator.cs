@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,13 +23,15 @@ namespace Service.IntrestManager.Api.Logic
         private readonly IWalletBalanceService _walletBalanceService;
         private readonly IAssetsDictionaryClient _assetsDictionaryClient;
         private readonly DatabaseContextFactory _contextFactory;
+        private readonly IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> _configWriter;
 
         public InterestRateByWalletGenerator(IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> ratesWriter, 
             ILogger<InterestRateByWalletGenerator> logger, 
             IMyNoSqlServerDataWriter<InterestRateSettingsNoSql> settingWriter, 
             IWalletBalanceService walletBalanceService, 
             IAssetsDictionaryClient assetsDictionaryClient, 
-            DatabaseContextFactory contextFactory)
+            DatabaseContextFactory contextFactory, 
+            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> configWriter)
         {
             _ratesWriter = ratesWriter;
             _logger = logger;
@@ -36,6 +39,7 @@ namespace Service.IntrestManager.Api.Logic
             _walletBalanceService = walletBalanceService;
             _assetsDictionaryClient = assetsDictionaryClient;
             _contextFactory = contextFactory;
+            _configWriter = configWriter;
         }
         
         public async Task<InterestRateByWallet> GenerateRatesByWallet(string walletId)
@@ -100,7 +104,12 @@ namespace Service.IntrestManager.Api.Logic
             
             // stage 4 : set accumulated rates
             await SetAccumulatedRates(ratesByWallet);
-
+            
+            
+            //stage 5 : set earn state and date
+            await AddInterestRateState(ratesByWallet);
+            await AddNextPaymentDate(ratesByWallet);
+            
             await SaveToNoSql(ratesByWallet);
 
             return ratesByWallet;
@@ -242,6 +251,51 @@ namespace Service.IntrestManager.Api.Logic
                         Apy = settingByWallet.Apy
                     });
                 }
+            }
+        }
+
+
+        private async Task AddInterestRateState(InterestRateByWallet ratesByWallet)
+        {
+            await using var ctx = _contextFactory.Create();
+            var states = await ctx.GetEarnStates(ratesByWallet.WalletId);
+
+            foreach (var rate in ratesByWallet.RateCollection)
+            {
+                if (!states.TryGetValue(rate.Asset, out var values)) continue;
+                
+                rate.CurrentEarnAmount = values.current;
+                rate.TotalEarnAmount = values.total;
+            }
+        }
+
+        private async Task AddNextPaymentDate(InterestRateByWallet ratesByWallet)
+        {
+             
+            var serviceConfig = (await _configWriter.GetAsync()).FirstOrDefault();
+            var nextPayment = serviceConfig?.Config.PaidPeriod switch
+            {
+                PaidPeriod.Day => DateTime.UtcNow.Date.AddDays(1),
+                PaidPeriod.Week => GetNextMonday(),
+                _ => GetFirstDayOfNextMonth()
+            };
+            
+            foreach (var rate in ratesByWallet.RateCollection)
+            {
+                rate.NextPaymentDate = nextPayment;
+            }
+            
+            //locals
+            DateTime GetNextMonday()
+            {
+                var daysToAdd = ((int) DayOfWeek.Monday - (int) DateTime.UtcNow.DayOfWeek + 7) % 7;
+                return DateTime.UtcNow.AddDays(daysToAdd).Date;
+            }
+
+            DateTime GetFirstDayOfNextMonth()
+            {
+                var tempDate = DateTime.Now.AddMonths(1);
+                return new DateTime(tempDate.Year, tempDate.Month, 1).Date; 
             }
         }
 

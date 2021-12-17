@@ -68,6 +68,9 @@ namespace Service.IntrestManager.Engines
             
             await _indexPriceEngine.UpdateIndexPrices(ctx);
             await ctx.ExecPaidAsync(dateFrom, dateTo, _logger);
+
+            await ctx.ExecTotalCalculationAsync(_logger);
+            await ctx.ExecCurrentCalculationAsync(dateTo, _logger);
         }
     }
 }
