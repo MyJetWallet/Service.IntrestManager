@@ -27,9 +27,12 @@ insert into temp_new_balances
 select "WalletId", "Symbol", "NewBalance" from
     (
         select *, ROW_NUMBER() OVER (PARTITION BY "WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
-        from balancehistory.balance_history
-        where "Timestamp" <= timestamp '${dateArg}'
-        order by "Timestamp" desc
+        from balancehistory.balance_history bh
+            join clientwallets.wallets cw
+                on bh."WalletId" = cw."WalletId"
+        where cw."EnableEarnProgram" = true 
+          and bh."Timestamp" <= timestamp '${dateArg}'
+        order by bh."Timestamp" desc
     ) t
 where t.rank = 1
   and t."NewBalance" > 0;
