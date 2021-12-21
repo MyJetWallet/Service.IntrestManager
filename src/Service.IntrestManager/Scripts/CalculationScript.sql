@@ -24,17 +24,17 @@ CREATE TEMPORARY TABLE temp_calculation_report
 ) ON COMMIT DROP;
 
 insert into temp_new_balances
-select "WalletId", "Symbol", "NewBalance" from
+select t."WalletId", t."Symbol", t."NewBalance" from
     (
-        select *, ROW_NUMBER() OVER (PARTITION BY "WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
+        select *, ROW_NUMBER() OVER (PARTITION BY bh."WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
         from balancehistory.balance_history bh
-            join clientwallets.wallets cw
-                on bh."WalletId" = cw."WalletId"
-        where cw."EnableEarnProgram" = true 
-          and bh."Timestamp" <= timestamp '${dateArg}'
+        where bh."Timestamp" <= timestamp '${dateArg}'
         order by bh."Timestamp" desc
     ) t
-where t.rank = 1
+        join clientwallets.wallets cw
+            on t."WalletId" = cw."WalletId"
+where cw."EnableEarnProgram" = true
+  and t.rank = 1
   and t."NewBalance" > 0;
 
 -- stage 1
