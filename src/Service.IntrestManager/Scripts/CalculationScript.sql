@@ -26,15 +26,15 @@ CREATE TEMPORARY TABLE temp_calculation_report
 insert into temp_new_balances
 select t."WalletId", t."Symbol", t."NewBalance" from
     (
-        select *, ROW_NUMBER() OVER (PARTITION BY bh."WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
+        select bh."WalletId", bh."Symbol", bh."NewBalance", ROW_NUMBER() OVER (PARTITION BY bh."WalletId", "Symbol" ORDER BY "Timestamp" DESC) "rank"
         from balancehistory.balance_history bh
-        where bh."Timestamp" <= timestamp '${dateArg}'
+                 join clientwallets.wallets cw
+                      on bh."WalletId" = cw."WalletId"
+        where cw."EnableEarnProgram" = true
+        and bh."Timestamp" <= timestamp '${dateArg}'
         order by bh."Timestamp" desc
     ) t
-        join clientwallets.wallets cw
-            on t."WalletId" = cw."WalletId"
-where cw."EnableEarnProgram" = true
-  and t.rank = 1
+  where t.rank = 1
   and t."NewBalance" > 0;
 
 -- stage 1
