@@ -53,7 +53,7 @@ select
     WalletId,
     Symbol,
     Date,
-    Amount,
+    round(Amount, 10),
     State,
     TransactionId,
     (select "Id" from interest_manager.paidhistory order by "Id" desc limit 1)

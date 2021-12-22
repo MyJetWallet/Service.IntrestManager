@@ -110,7 +110,7 @@ select walletid,
        symbol,
        newbalance,
        apr,
-       amount,
+       round(amount, 10),
        date,
        (select "Id" from interest_manager.calculationhistory order by "Id" desc limit 1)
 from temp_calculation;
