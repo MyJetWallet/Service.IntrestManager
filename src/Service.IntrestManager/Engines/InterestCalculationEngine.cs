@@ -59,9 +59,9 @@ namespace Service.IntrestManager.Engines
             
             await _indexPriceEngine.UpdateIndexPrices(ctx);
             await ctx.ExecCalculationAsync(calculationDate, _logger);
-            await _ratesWriter.CleanAndKeepMaxPartitions(0);
-            
             await ctx.ExecCurrentCalculationAsync(calculationDate, _logger);
+
+            await _ratesWriter.CleanAndKeepMaxPartitions(0);
         }
     }
 }
