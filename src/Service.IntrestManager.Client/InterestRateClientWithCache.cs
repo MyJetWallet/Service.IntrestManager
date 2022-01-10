@@ -23,7 +23,7 @@ namespace Service.IntrestManager.Client
         public async Task<InterestRateByWallet> GetInterestRatesByWalletAsync(string walletId)
         {
             var cache = _reader.Get(walletId).FirstOrDefault();
-            if (cache != null && cache.Rates.RateCollection.All(t=>t.NextPaymentDate != DateTime.MinValue))
+            if (cache != null && cache.Rates.RateCollection.All(t=>t.NextPaymentDate > DateTime.UtcNow))
                 return cache.Rates;
 
             var ratesFromGrpc = await _interestRateClientService.GetInterestRatesByWalletAsync(

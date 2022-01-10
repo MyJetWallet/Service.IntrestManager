@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -61,7 +62,11 @@ namespace Service.IntrestManager.Engines
             await ctx.ExecCalculationAsync(calculationDate, _logger);
             await ctx.ExecCurrentCalculationAsync(calculationDate, _logger);
 
-            await _ratesWriter.CleanAndKeepMaxPartitions(0);
+            var entities = await _ratesWriter.GetAsync();
+            foreach (var key in entities.Select(t=>t.PartitionKey).Distinct())
+            {
+                await _ratesWriter.CleanAndKeepMaxRecords(key, 0);
+            }
         }
     }
 }

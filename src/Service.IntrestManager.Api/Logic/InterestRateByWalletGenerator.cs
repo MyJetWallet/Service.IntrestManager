@@ -306,7 +306,11 @@ namespace Service.IntrestManager.Api.Logic
         public async Task ClearRates()
         {
             _logger.LogInformation("ClearRates run in InterestRateByWalletGenerator");
-            await _ratesWriter.CleanAndKeepMaxPartitions(0);
+            var entities = await _ratesWriter.GetAsync();
+            foreach (var key in entities.Select(t=>t.PartitionKey).Distinct())
+            {
+                await _ratesWriter.CleanAndKeepMaxRecords(key, 0);
+            }
         }
     }
 }
