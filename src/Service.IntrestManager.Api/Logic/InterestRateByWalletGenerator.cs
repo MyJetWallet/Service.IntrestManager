@@ -271,7 +271,6 @@ namespace Service.IntrestManager.Api.Logic
 
         private async Task AddNextPaymentDate(InterestRateByWallet ratesByWallet)
         {
-             
             var serviceConfig = (await _configWriter.GetAsync()).FirstOrDefault();
             var nextPayment = serviceConfig?.Config.PaidPeriod switch
             {
@@ -288,8 +287,13 @@ namespace Service.IntrestManager.Api.Logic
             //locals
             DateTime GetNextMonday()
             {
-                var daysToAdd = ((int) DayOfWeek.Monday - (int) DateTime.UtcNow.DayOfWeek + 7) % 7;
-                return DateTime.UtcNow.AddDays(daysToAdd).Date;
+                
+                var diff = DateTime.UtcNow.DayOfWeek - DayOfWeek.Monday;
+                if (diff < 0)
+                    diff += 7;
+                diff += 7;
+                var nextMonday = DateTime.UtcNow.AddDays(diff).Date;
+                return nextMonday;
             }
 
             DateTime GetFirstDayOfNextMonth()

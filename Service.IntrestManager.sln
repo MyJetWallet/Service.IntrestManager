@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.InterestManager.Pos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.IntrestManager.Api", "src\Service.IntrestManager.Api\Service.IntrestManager.Api.csproj", "{D4720EF8-E7E1-43FA-AF87-B15CDA8E6016}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "test\TestApp\TestApp.csproj", "{81257685-7991-4FD4-A092-F708240B8EF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +74,10 @@ Global
 		{D4720EF8-E7E1-43FA-AF87-B15CDA8E6016}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4720EF8-E7E1-43FA-AF87-B15CDA8E6016}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4720EF8-E7E1-43FA-AF87-B15CDA8E6016}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81257685-7991-4FD4-A092-F708240B8EF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81257685-7991-4FD4-A092-F708240B8EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81257685-7991-4FD4-A092-F708240B8EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81257685-7991-4FD4-A092-F708240B8EF3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -83,6 +89,7 @@ Global
 		{FF868A2B-24FA-42B0-8400-95EDEE689678} = {D11EB899-A148-4C9B-B340-B907EF71C4A2}
 		{5CFE74A4-CDBB-4E2D-9C0A-9CEF20DCB38B} = {446301A0-97F2-4921-BA0B-32B76039C73B}
 		{99A0784B-3AA7-49E8-B4D4-038200EBE1A2} = {446301A0-97F2-4921-BA0B-32B76039C73B}
+		{81257685-7991-4FD4-A092-F708240B8EF3} = {D11EB899-A148-4C9B-B340-B907EF71C4A2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6BF00C9D-AD55-40F2-8FE3-E5C3559B3E26}
