@@ -287,13 +287,12 @@ namespace Service.IntrestManager.Api.Logic
             //locals
             DateTime GetNextMonday()
             {
-                
-                var diff = DateTime.UtcNow.DayOfWeek - DayOfWeek.Monday;
-                if (diff < 0)
+                var today = DateTime.UtcNow;
+            
+                var diff = ((int) DayOfWeek.Monday - (int) today.DayOfWeek + 7) % 7;
+                if (diff == 0)
                     diff += 7;
-                diff += 7;
-                var nextMonday = DateTime.UtcNow.AddDays(diff).Date;
-                return nextMonday;
+                return today.AddDays(diff).Date;
             }
 
             DateTime GetFirstDayOfNextMonth()
