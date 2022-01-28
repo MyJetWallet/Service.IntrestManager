@@ -148,7 +148,7 @@ namespace Service.IntrestManager.Engines
                 ClientId = serviceConfig.ServiceClient,
                 FromWalletId = serviceConfig.ServiceWallet,
                 ToWalletId = interestRatePaid.WalletId,
-                Amount = (double) roundedAmount,
+                Amount = roundedAmount,
                 AssetSymbol = interestRatePaid.Symbol,
                 Comment = "Paid interest rate",
                 BrokerId = serviceConfig.ServiceBroker,
