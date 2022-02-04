@@ -34,5 +34,8 @@ namespace Service.IntrestManager.Api.Settings
 
         [YamlProperty("InterestManager.BalancesGrpcServiceUrl")]
         public string BalancesGrpcServiceUrl { get; set; }
+        
+        [YamlProperty("InterestManager.ClientWalletsGrpcServiceUrl")]
+        public string ClientWalletsGrpcServiceUrl { get; set; }
     }
 }

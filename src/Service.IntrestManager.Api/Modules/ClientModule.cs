@@ -2,6 +2,7 @@ using Autofac;
 using MyJetWallet.Sdk.NoSql;
 using Service.AssetsDictionary.Client;
 using Service.Balances.Client;
+using Service.ClientWallets.Client;
 
 namespace Service.IntrestManager.Api.Modules
 {
@@ -12,6 +13,7 @@ namespace Service.IntrestManager.Api.Modules
             var myNoSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
             builder.RegisterBalancesClients(Program.Settings.BalancesGrpcServiceUrl, myNoSqlClient);
             builder.RegisterAssetsDictionaryClients(myNoSqlClient);
+            builder.RegisterClientWalletsClients(myNoSqlClient, Program.Settings.ClientWalletsGrpcServiceUrl);
         }
     }
 }

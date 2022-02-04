@@ -8,6 +8,8 @@ using Service.AssetsDictionary.Client;
 using Service.AssetsDictionary.Domain.Models;
 using Service.Balances.Grpc;
 using Service.Balances.Grpc.Models;
+using Service.ClientWallets.Grpc;
+using Service.ClientWallets.Grpc.Models;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain;
 using Service.IntrestManager.Domain.Models;
@@ -24,6 +26,7 @@ namespace Service.IntrestManager.Api.Logic
         private readonly IAssetsDictionaryClient _assetsDictionaryClient;
         private readonly DatabaseContextFactory _contextFactory;
         private readonly IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> _configWriter;
+        private readonly IClientWalletService _walletService;
 
         public InterestRateByWalletGenerator(IMyNoSqlServerDataWriter<InterestRateByWalletNoSql> ratesWriter, 
             ILogger<InterestRateByWalletGenerator> logger, 
@@ -109,6 +112,9 @@ namespace Service.IntrestManager.Api.Logic
             //stage 5 : set earn state and date
             await AddInterestRateState(ratesByWallet);
             await AddNextPaymentDate(ratesByWallet);
+            
+            //stage 6: set 
+            await SetToZeroForDisabled(ratesByWallet);
             
             await SaveToNoSql(ratesByWallet);
 
@@ -253,8 +259,7 @@ namespace Service.IntrestManager.Api.Logic
                 }
             }
         }
-
-
+        
         private async Task AddInterestRateState(InterestRateByWallet ratesByWallet)
         {
             await using var ctx = _contextFactory.Create();
@@ -302,6 +307,23 @@ namespace Service.IntrestManager.Api.Logic
             }
         }
 
+        private async Task SetToZeroForDisabled(InterestRateByWallet ratesByWallet)
+        {
+            var wallet = await _walletService.GetWalletInfoByIdAsync(new GetWalletInfoByIdRequest
+            {
+                WalletId = ratesByWallet.WalletId
+            });
+            if (!wallet.WalletInfo.EnableEarnProgram)
+            {
+                foreach (var rate in ratesByWallet.RateCollection)
+                {
+                    rate.Apr = Decimal.Zero;
+                    rate.Apy = Decimal.Zero;
+                    rate.AccumulatedAmount = Decimal.Zero;
+                    rate.CurrentEarnAmount = Decimal.Zero;
+                }
+            }
+        }
         public async Task ClearRates()
         {
             _logger.LogInformation("ClearRates run in InterestRateByWalletGenerator");
