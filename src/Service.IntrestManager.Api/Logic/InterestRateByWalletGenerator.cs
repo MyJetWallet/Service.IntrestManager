@@ -319,8 +319,6 @@ namespace Service.IntrestManager.Api.Logic
                 {
                     rate.Apr = Decimal.Zero;
                     rate.Apy = Decimal.Zero;
-                    rate.AccumulatedAmount = Decimal.Zero;
-                    rate.CurrentEarnAmount = Decimal.Zero;
                 }
             }
         }
