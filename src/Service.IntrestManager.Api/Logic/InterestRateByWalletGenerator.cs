@@ -34,7 +34,8 @@ namespace Service.IntrestManager.Api.Logic
             IWalletBalanceService walletBalanceService, 
             IAssetsDictionaryClient assetsDictionaryClient, 
             DatabaseContextFactory contextFactory, 
-            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> configWriter)
+            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> configWriter, 
+            IClientWalletService walletService)
         {
             _ratesWriter = ratesWriter;
             _logger = logger;
@@ -43,6 +44,7 @@ namespace Service.IntrestManager.Api.Logic
             _assetsDictionaryClient = assetsDictionaryClient;
             _contextFactory = contextFactory;
             _configWriter = configWriter;
+            _walletService = walletService;
         }
         
         public async Task<InterestRateByWallet> GenerateRatesByWallet(string walletId)
