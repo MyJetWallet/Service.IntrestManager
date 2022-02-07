@@ -315,6 +315,11 @@ namespace Service.IntrestManager.Api.Logic
             {
                 WalletId = ratesByWallet.WalletId
             });
+            if (!wallet.Success)
+            {
+                _logger.LogWarning("Unable to get wallet by walletId {walletId}, error respone {errorCode}", ratesByWallet.WalletId, wallet.ErrorMessage);
+                return;
+            }
             if (!wallet.WalletInfo.EnableEarnProgram)
             {
                 foreach (var rate in ratesByWallet.RateCollection)
