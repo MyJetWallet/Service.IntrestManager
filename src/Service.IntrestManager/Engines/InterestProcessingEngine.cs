@@ -96,6 +96,8 @@ namespace Service.IntrestManager.Engines
 
                 foreach (var interestRatePaid in paidToProcess)
                 {
+                    interestRatePaid.Iteration++;
+                    
                     if (interestRatePaid.Amount == 0)
                     {
                         _logger.LogInformation("Skipped walletId: {walletid} and asset: {assetSymbol} with amount {amountJson}",
@@ -162,6 +164,8 @@ namespace Service.IntrestManager.Engines
                 interestRatePaid.State = PaidState.Completed;
                 interestRatePaid.Amount = roundedAmount;
                 interestRatePaid.ErrorMessage = string.Empty;
+                interestRatePaid.DatePaid = DateTime.UtcNow;
+                
                 lock (messages)
                 {
                     messages.Add(new PaidInterestRateMessage()

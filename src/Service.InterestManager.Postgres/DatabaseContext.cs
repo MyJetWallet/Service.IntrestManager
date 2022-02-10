@@ -114,7 +114,9 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.ErrorMessage);
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.TransactionId);
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.HistoryId);
-            
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.Iteration);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.DatePaid).HasDefaultValue(DateTime.MinValue);
+
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol});
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => e.WalletId);

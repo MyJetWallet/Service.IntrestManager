@@ -16,6 +16,8 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 8)] public string TransactionId { get; set; }
         [DataMember(Order = 9)] public long HistoryId { get; set; }
         [DataMember(Order = 10)] public DateTime LastTs { get; set; }
+        [DataMember(Order = 11)] public long Iteration { get; set; }
+        [DataMember(Order = 12)] public DateTime DatePaid { get; set; }
     }
 
     [DataContract]
