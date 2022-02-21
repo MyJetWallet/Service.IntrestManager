@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using MyJetWallet.Sdk.NoSql;
 using Service.InterestManager.Postrges;
+using Service.IntrestManager.Api.Jobs;
 using Service.IntrestManager.Api.Logic;
 using Service.IntrestManager.Api.Services;
 using Service.IntrestManager.Api.Storage;
@@ -36,6 +37,12 @@ namespace Service.IntrestManager.Api.Modules
                 .RegisterType<InterestRateSettingsService>()
                 .As<IInterestRateSettingsService>()
                 .SingleInstance();
+
+            builder
+                .RegisterType<WalletUpdateJob>()
+                .AsSelf()
+                .SingleInstance()
+                .AutoActivate();
         }
     }
 }
