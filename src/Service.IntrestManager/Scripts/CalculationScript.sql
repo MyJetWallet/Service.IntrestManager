@@ -115,4 +115,10 @@ select walletid,
        (select "Id" from interest_manager.calculationhistory order by "Id" desc limit 1)
 from temp_calculation;
 
+--indexprice set
+UPDATE interest_manager.interestratecalculation
+SET "IndexPrice" = (SELECT "PriceInUsd" FROM interest_manager.indexprice
+                    WHERE interest_manager.indexprice."Asset" = interest_manager.interestratecalculation."Symbol"
+                      AND interest_manager.interestratecalculation."IndexPrice" = 0);
+
 COMMIT;

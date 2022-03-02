@@ -18,6 +18,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 10)] public DateTime LastTs { get; set; }
         [DataMember(Order = 11)] public long Iteration { get; set; }
         [DataMember(Order = 12)] public DateTime DatePaid { get; set; }
+        [DataMember(Order = 13)] public decimal IndexPrice { get; set; }
     }
 
     [DataContract]

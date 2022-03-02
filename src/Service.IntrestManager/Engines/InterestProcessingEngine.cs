@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Service.AssetsDictionary.Client;
 using Service.ChangeBalanceGateway.Grpc;
 using Service.ChangeBalanceGateway.Grpc.Models;
+using Service.IndexPrices.Client;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
 using Service.IntrestManager.Domain.Models.NoSql;
@@ -27,13 +28,14 @@ namespace Service.IntrestManager.Engines
         private readonly IServiceBusPublisher<PaidInterestRateMessage> _publisher;
         private readonly IAssetsDictionaryClient _assetsClient;
         private readonly IMyNoSqlServerDataReader<InterestManagerConfigNoSql> _myNoSqlServerDataReader;
-
+        private readonly IIndexPricesClient _indexPrices;
         public InterestProcessingEngine(ILogger<InterestProcessingEngine> logger,
             DatabaseContextFactory databaseContextFactory,
             ISpotChangeBalanceService spotChangeBalanceService,
             IServiceBusPublisher<PaidInterestRateMessage> publisher, 
             IAssetsDictionaryClient assetsClient, 
-            IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader)
+            IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader, 
+            IIndexPricesClient indexPrices)
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
@@ -41,6 +43,7 @@ namespace Service.IntrestManager.Engines
             _publisher = publisher;
             _assetsClient = assetsClient;
             _myNoSqlServerDataReader = myNoSqlServerDataReader;
+            _indexPrices = indexPrices;
         }
 
         public async Task Execute()
@@ -165,6 +168,7 @@ namespace Service.IntrestManager.Engines
                 interestRatePaid.Amount = roundedAmount;
                 interestRatePaid.ErrorMessage = string.Empty;
                 interestRatePaid.DatePaid = DateTime.UtcNow;
+                interestRatePaid.IndexPrice = _indexPrices.GetIndexPriceByAssetAsync(interestRatePaid.Symbol).UsdPrice;
                 
                 lock (messages)
                 {
