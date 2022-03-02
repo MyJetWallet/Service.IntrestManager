@@ -21,6 +21,7 @@ namespace Service.IntrestManager.Api.Services
 
         public async Task<GetInterestRatesByWalletResponse> GetInterestRatesByWalletAsync(GetInterestRatesByWalletRequest request)
         {
+            Console.WriteLine($"GetInterestRatesByWalletAsync start ({request.WalletId}) {DateTime.UtcNow:O}");
             try
             {
                 if (string.IsNullOrWhiteSpace(request.WalletId))
@@ -33,6 +34,9 @@ namespace Service.IntrestManager.Api.Services
                 }
                 var rates = await _interestRateByWalletGenerator
                     .GenerateRatesByWallet(request.WalletId);
+                
+                Console.WriteLine($"GetInterestRatesByWalletAsync stop ({request.WalletId}) {DateTime.UtcNow:O}");
+                
                 return new GetInterestRatesByWalletResponse()
                 {
                     Success = true,
@@ -48,6 +52,7 @@ namespace Service.IntrestManager.Api.Services
                     ErrorMessage = ex.Message
                 };
             }
+            
         }
     }
 }
