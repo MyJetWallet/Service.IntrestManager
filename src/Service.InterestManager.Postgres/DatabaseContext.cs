@@ -75,7 +75,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<CalculationHistory>().Property(e => e.AmountInWalletsInUsd);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.CalculatedAmountInUsd);
             modelBuilder.Entity<CalculationHistory>().Property(e => e.SettingsJson);
-            
+            modelBuilder.Entity<CalculationHistory>().Property(e => e.LastTs).HasDefaultValue(DateTime.MinValue);
+
             modelBuilder.Entity<CalculationHistory>().HasIndex(e => e.CompletedDate);
 
             modelBuilder.Entity<CalculationHistory>().HasIndex(e => e.LastTs);
@@ -93,7 +94,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<PaidHistory>().Property(e => e.RangeTo);
             modelBuilder.Entity<PaidHistory>().Property(e => e.WalletCount);
             modelBuilder.Entity<PaidHistory>().Property(e => e.TotalPaidInUsd);
-            
+            modelBuilder.Entity<PaidHistory>().Property(e => e.LastTs).HasDefaultValue(DateTime.MinValue);
+
             modelBuilder.Entity<PaidHistory>().HasIndex(e => e.CreatedDate);
 
             modelBuilder.Entity<PaidHistory>().HasIndex(e => e.LastTs);
@@ -116,6 +118,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.HistoryId);
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.Iteration);
             modelBuilder.Entity<InterestRatePaid>().Property(e => e.DatePaid).HasDefaultValue(DateTime.MinValue);
+            modelBuilder.Entity<InterestRatePaid>().Property(e => e.LastTs).HasDefaultValue(DateTime.MinValue);
 
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
             modelBuilder.Entity<InterestRatePaid>().HasIndex(e => new {e.WalletId, e.Symbol});
@@ -140,7 +143,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Amount);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.Date);
             modelBuilder.Entity<InterestRateCalculation>().Property(e => e.HistoryId);
-            
+            modelBuilder.Entity<InterestRateCalculation>().Property(e => e.LastTs).HasDefaultValue(DateTime.MinValue);
+
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol, e.Date}).IsUnique();
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol});
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.WalletId);
@@ -163,7 +167,8 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateSettings>().Property(e => e.Apr);
             modelBuilder.Entity<InterestRateSettings>().Property(e => e.Apy);
             modelBuilder.Entity<InterestRateSettings>().Property(e => e.DailyLimitInUsd);
-            
+            modelBuilder.Entity<InterestRateSettings>().Property(e => e.LastTs).HasDefaultValue(DateTime.MinValue);
+
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset, e.RangeFrom, e.RangeTo}).IsUnique();
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => new {e.WalletId, e.Asset});
             modelBuilder.Entity<InterestRateSettings>().HasIndex(e => e.WalletId);
