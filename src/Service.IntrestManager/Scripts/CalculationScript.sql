@@ -105,20 +105,15 @@ values ((timestamp '${dateArg}'),
         (select json_agg(interestratesettings) from interest_manager.interestratesettings));
 
 -- calculation
-insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apr", "Amount", "Date", "HistoryId")
+insert into interest_manager.interestratecalculation ("WalletId", "Symbol", "NewBalance", "Apr", "Amount", "Date", "HistoryId", "IndexPrice")
 select walletid,
        symbol,
        newbalance,
        apr,
        round(amount, 10),
        date,
-       (select "Id" from interest_manager.calculationhistory order by "Id" desc limit 1)
+       (select "Id" from interest_manager.calculationhistory order by "Id" desc limit 1),
+       (select "PriceInUsd" from interest_manager.indexprice where interest_manager.indexprice."Asset" = interest_manager.temp_calculation."Symbol")
 from temp_calculation;
-
---indexprice set
-UPDATE interest_manager.interestratecalculation
-SET "IndexPrice" = (SELECT "PriceInUsd" FROM interest_manager.indexprice
-                    WHERE interest_manager.indexprice."Asset" = interest_manager.interestratecalculation."Symbol")
-WHERE interest_manager.interestratecalculation."IndexPrice" = 0;
 
 COMMIT;
