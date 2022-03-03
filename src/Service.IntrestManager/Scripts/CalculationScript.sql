@@ -113,7 +113,13 @@ select walletid,
        round(amount, 10),
        date,
        (select "Id" from interest_manager.calculationhistory order by "Id" desc limit 1),
-       (select "PriceInUsd" from interest_manager.indexprice where interest_manager.indexprice."Asset" = interest_manager.temp_calculation."Symbol")
+       0
 from temp_calculation;
+
+--indexprice set
+UPDATE interest_manager.interestratecalculation ic
+SET "IndexPrice" = ip."PriceInUsd"
+FROM interest_manager.indexprice ip
+WHERE ic."IndexPrice" = 0 and ic."Symbol" = ip."Asset";
 
 COMMIT;

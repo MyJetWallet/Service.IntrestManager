@@ -149,6 +149,7 @@ namespace Service.InterestManager.Postrges
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => new {e.WalletId, e.Symbol});
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.WalletId);
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.Symbol);
+            modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.IndexPrice);
 
             modelBuilder.Entity<InterestRateCalculation>().HasIndex(e => e.LastTs);
         }
