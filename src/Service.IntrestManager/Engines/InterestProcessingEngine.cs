@@ -27,6 +27,7 @@ namespace Service.IntrestManager.Engines
         private readonly ISpotChangeBalanceService _spotChangeBalanceService;
         private readonly IServiceBusPublisher<PaidInterestRateMessage> _paidInterestPublisher;
         private readonly IServiceBusPublisher<FailedInterestRateMessage> _failedInterestPublisher;
+        private readonly IServiceBusPublisher<InterestProcessingResult> _processingResultPublisher;
         private readonly IAssetsDictionaryClient _assetsClient;
         private readonly IMyNoSqlServerDataReader<InterestManagerConfigNoSql> _myNoSqlServerDataReader;
         private readonly IIndexPricesClient _indexPrices;
@@ -35,6 +36,7 @@ namespace Service.IntrestManager.Engines
             ISpotChangeBalanceService spotChangeBalanceService,
             IServiceBusPublisher<PaidInterestRateMessage> paidInterestPublisher,
             IServiceBusPublisher<FailedInterestRateMessage> failedInterestPublisher,
+            IServiceBusPublisher<InterestProcessingResult> processingResultPublisher,
             IAssetsDictionaryClient assetsClient, 
             IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader, 
             IIndexPricesClient indexPrices)
@@ -44,6 +46,7 @@ namespace Service.IntrestManager.Engines
             _spotChangeBalanceService = spotChangeBalanceService;
             _paidInterestPublisher = paidInterestPublisher;
             _failedInterestPublisher = failedInterestPublisher;
+            _processingResultPublisher = processingResultPublisher;
             _assetsClient = assetsClient;
             _myNoSqlServerDataReader = myNoSqlServerDataReader;
             _indexPrices = indexPrices;
@@ -76,6 +79,9 @@ namespace Service.IntrestManager.Engines
                 assets = _assetsClient.GetAllAssets();
             }
             
+            await using var ctx = _databaseContextFactory.Create();
+            var processingResult = new InterestProcessingResult();
+
             while (true)
             {
                 await Task.Delay(1);
@@ -89,7 +95,6 @@ namespace Service.IntrestManager.Engines
                 var sv = new Stopwatch();
                 sv.Start();
                 
-                await using var ctx = _databaseContextFactory.Create();
                 var paidToProcess = ctx.GetTop100PaidToProcess();
                 
                 if (!paidToProcess.Any())
@@ -130,19 +135,27 @@ namespace Service.IntrestManager.Engines
                 await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
                 await _paidInterestPublisher.PublishAsync(paidInterestRateMessages);
-                await _failedInterestPublisher.PublishAsync(paidToProcess
+                var failedInterest = paidToProcess
                     .Where(p => p.State == PaidState.Failed)
                     .Select(f => new FailedInterestRateMessage
                     {
                         Date = f.Date,
                         ErrorMessage = f.ErrorMessage,
                         WalletId = f.WalletId
-                    }));
+                    })
+                    .ToList();
+                await _failedInterestPublisher.PublishAsync(failedInterest);
+                processingResult.FailedCount += failedInterest.Count;
+                processingResult.PaidCount += paidInterestRateMessages.Count;
 
                 sv.Stop();
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
                     iterationCount, paidToProcess.Count, sv.Elapsed.ToString());
             }
+
+            var history = ctx.GetLastPaidHistory();
+            processingResult.TotalPaidAmountInUsd = history.TotalPaidInUsd;
+            await _processingResultPublisher.PublishAsync(processingResult);
         }
 
         private async Task PushToGateway(InterestManagerConfig serviceConfig,

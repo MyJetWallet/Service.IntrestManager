@@ -13,6 +13,7 @@ namespace Service.IntrestManager.Modules
                 Program.ReloadedSettings(e => e.SpotServiceBusHostPort), Program.LogFactory);
             builder.RegisterMyServiceBusPublisher<PaidInterestRateMessage>(serviceBusClient, PaidInterestRateMessage.TopicName, true);
             builder.RegisterMyServiceBusPublisher<FailedInterestRateMessage>(serviceBusClient, FailedInterestRateMessage.TopicName, true);
+            builder.RegisterMyServiceBusPublisher<InterestProcessingResult>(serviceBusClient, InterestProcessingResult.TopicName, true);
         }
     }
 }
