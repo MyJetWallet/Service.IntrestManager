@@ -86,7 +86,7 @@ namespace Service.IntrestManager.Engines
             {
                 await Task.Delay(1);
 
-                var paidInterestRateMessages = new List<PaidInterestRateMessage>();
+                var complitedInteredRates = new List<PaidInterestRateMessage>();
                 var gatewayTaskList = new List<Task>();
                 iterationCount++;
                 
@@ -130,12 +130,12 @@ namespace Service.IntrestManager.Engines
                             $"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol}. Cannot find asset in asset dictionary.";
                         continue;
                     }
-                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, paidInterestRateMessages, asset.Accuracy));
+                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, complitedInteredRates, asset.Accuracy));
                 }
                 await Task.WhenAll(gatewayTaskList);
                 await ctx.SaveChangesAsync();
-                await _paidInterestPublisher.PublishAsync(paidInterestRateMessages);
-                var failedInterest = paidToProcess
+                await _paidInterestPublisher.PublishAsync(complitedInteredRates);
+                var failedInterestRates = paidToProcess
                     .Where(p => p.State == PaidState.Failed)
                     .Select(f => new FailedInterestRateMessage
                     {
@@ -144,9 +144,9 @@ namespace Service.IntrestManager.Engines
                         WalletId = f.WalletId
                     })
                     .ToList();
-                await _failedInterestPublisher.PublishAsync(failedInterest);
-                processingResult.FailedCount += failedInterest.Count;
-                processingResult.PaidCount += paidInterestRateMessages.Count;
+                await _failedInterestPublisher.PublishAsync(failedInterestRates);
+                processingResult.FailedCount += failedInterestRates.Count;
+                processingResult.CompletedCount += complitedInteredRates.Count;
 
                 sv.Stop();
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
