@@ -12,6 +12,7 @@ namespace Service.IntrestManager.Modules
             var serviceBusClient = builder.RegisterMyServiceBusTcpClient(
                 Program.ReloadedSettings(e => e.SpotServiceBusHostPort), Program.LogFactory);
             builder.RegisterMyServiceBusPublisher<PaidInterestRateMessage>(serviceBusClient, PaidInterestRateMessage.TopicName, true);
+            builder.RegisterMyServiceBusPublisher<FailedInterestRateMessage>(serviceBusClient, FailedInterestRateMessage.TopicName, true);
         }
     }
 }
