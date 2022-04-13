@@ -79,7 +79,6 @@ namespace Service.IntrestManager.Engines
                 assets = _assetsClient.GetAllAssets();
             }
             
-            await using var ctx = _databaseContextFactory.Create();
             var processingResult = new InterestProcessingResult();
 
             while (true)
@@ -95,7 +94,8 @@ namespace Service.IntrestManager.Engines
                 var sv = new Stopwatch();
                 sv.Start();
                 
-                var paidToProcess = ctx.GetTop100PaidToProcess();
+                await using var loopCtx = _databaseContextFactory.Create();
+                var paidToProcess = loopCtx.GetTop100PaidToProcess();
                 
                 if (!paidToProcess.Any())
                 {
@@ -133,7 +133,7 @@ namespace Service.IntrestManager.Engines
                     gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, complitedInteredRates, asset.Accuracy));
                 }
                 await Task.WhenAll(gatewayTaskList);
-                await ctx.SaveChangesAsync();
+                await loopCtx.SaveChangesAsync();
                 await _paidInterestPublisher.PublishAsync(complitedInteredRates);
                 var failedInterestRates = paidToProcess
                     .Where(p => p.State == PaidState.Failed)
@@ -152,7 +152,8 @@ namespace Service.IntrestManager.Engines
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
                     iterationCount, paidToProcess.Count, sv.Elapsed.ToString());
             }
-
+            
+            await using var ctx = _databaseContextFactory.Create();
             var history = ctx.GetLastPaidHistory();
             processingResult.TotalPaidAmountInUsd = history.TotalPaidInUsd;
             await _processingResultPublisher.PublishAsync(processingResult);
