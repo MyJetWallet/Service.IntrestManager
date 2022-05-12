@@ -13,7 +13,7 @@ namespace Service.IntrestManager.Api.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            var myNoSqlClient = builder.CreateNoSqlClient(Program.ReloadedSettings(e => e.MyNoSqlReaderHostPort));
+            var myNoSqlClient = builder.CreateNoSqlClient(Program.Settings.MyNoSqlReaderHostPort, Program.LogFactory);
             builder.RegisterBalancesClients(Program.Settings.BalancesGrpcServiceUrl, myNoSqlClient);
             builder.RegisterAssetsDictionaryClients(myNoSqlClient);
             builder.RegisterClientWalletsClients(myNoSqlClient, Program.Settings.ClientWalletsGrpcServiceUrl);
