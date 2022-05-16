@@ -85,7 +85,7 @@ namespace Service.IntrestManager.Engines
             {
                 await Task.Delay(1);
 
-                var complitedInteredRates = new List<PaidInterestRateMessage>();
+                var completedInterestRates = new List<PaidInterestRateMessage>();
                 var gatewayTaskList = new List<Task>();
                 iterationCount++;
                 
@@ -130,23 +130,29 @@ namespace Service.IntrestManager.Engines
                             $"Skipped walletId: {interestRatePaid.WalletId} and asset: {interestRatePaid.Symbol}. Cannot find asset in asset dictionary.";
                         continue;
                     }
-                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, complitedInteredRates, asset.Accuracy));
+                    gatewayTaskList.Add(PushToGateway(serviceConfig.Config, interestRatePaid, completedInterestRates, asset.Accuracy));
                 }
+                
                 await Task.WhenAll(gatewayTaskList);
                 await loopCtx.SaveChangesAsync();
-                await _paidInterestPublisher.PublishAsync(complitedInteredRates);
+                await _paidInterestPublisher.PublishAsync(completedInterestRates);
+                
                 var failedInterestRates = paidToProcess
                     .Where(p => p.State == PaidState.Failed)
                     .Select(f => new FailedInterestRateMessage
                     {
                         Date = f.Date,
                         ErrorMessage = f.ErrorMessage,
-                        WalletId = f.WalletId
+                        WalletId = f.WalletId,
+                        Amount = f.Amount,
+                        Symbol = f.Symbol,
+                        IndexPrice = f.IndexPrice
                     })
                     .ToList();
                 await _failedInterestPublisher.PublishAsync(failedInterestRates);
-                processingResult.FailedCount += failedInterestRates.Count;
-                processingResult.CompletedCount += complitedInteredRates.Count;
+
+                processingResult.AddFailed(failedInterestRates);
+                processingResult.AddCompleted(completedInterestRates);
 
                 sv.Stop();
                 _logger.LogInformation("Iteration number: {iterationNumber}. InterestProcessingJob finish process {paidCount} records. Iteration time: {delay}", 
@@ -205,7 +211,8 @@ namespace Service.IntrestManager.Engines
                         WalletId = interestRatePaid.WalletId,
                         Symbol = interestRatePaid.Symbol,
                         Date = DateTime.UtcNow,
-                        Amount = roundedAmount
+                        Amount = roundedAmount,
+                        IndexPrice = interestRatePaid.IndexPrice
                     });
                 }
             }

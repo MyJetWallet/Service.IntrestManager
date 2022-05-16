@@ -15,5 +15,7 @@ namespace Service.IntrestManager.Domain.Models
         [DataMember(Order = 5)] public string Symbol { get; set; }
         [DataMember(Order = 6)] public DateTime Date { get; set; }
         [DataMember(Order = 7)] public decimal Amount { get; set; }
+        [DataMember(Order = 8)] public decimal IndexPrice { get; set; }
+
     }
 }
