@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 
 namespace Service.IntrestManager.Domain.Models
 {
+    [DataContract]
     public class FailedInterestRateMessage
     {
         public const string TopicName = "failed-interest-rate";

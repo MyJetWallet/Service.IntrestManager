@@ -220,6 +220,7 @@ namespace Service.IntrestManager.Engines
             {
                 interestRatePaid.State = PaidState.Failed;
                 interestRatePaid.ErrorMessage = $"{processResponse.ErrorCode}: {processResponse.ErrorMessage}";
+                interestRatePaid.IndexPrice = _indexPrices.GetIndexPriceByAssetAsync(interestRatePaid.Symbol).UsdPrice;
             }
         }
     }
