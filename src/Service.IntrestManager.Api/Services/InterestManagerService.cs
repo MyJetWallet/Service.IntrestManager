@@ -272,14 +272,15 @@ namespace Service.IntrestManager.Api.Services
                 }
                 case PaidPeriod.Month:
                 {
-                    if (lastPaid?.CreatedDate.Month == DateTime.UtcNow.Month)
+                    if (DateTime.UtcNow.Date.Day == 1 && lastPaid?.CreatedDate.Month != DateTime.UtcNow.Month)
                     {
-                        var nextMonth = DateTime.UtcNow.Month == 12 ? 1 : DateTime.UtcNow.Month + 1;
-                        var nextYear = DateTime.UtcNow.Month == 12 ? DateTime.UtcNow.Year + 1 : DateTime.UtcNow.Year;
-                        return new DateTime(nextYear, nextMonth, 1);
+                        return DateTime.UtcNow.Date;
                     }
 
-                    return new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+                    var month = DateTime.UtcNow.Month == 12 ? 1 : DateTime.UtcNow.Month + 1;
+                    var year = DateTime.UtcNow.Month == 12 ? DateTime.UtcNow.Year + 1 : DateTime.UtcNow.Year;
+
+                    return new DateTime(year, month, 1);
                 }
                 default: throw new NotSupportedException($"Period {serviceConfig?.Config?.PaidPeriod}");
             }
