@@ -138,7 +138,7 @@ namespace Service.IntrestManager.Engines
                 await _paidInterestPublisher.PublishAsync(completedInterestRates);
                 
                 var failedInterestRates = paidToProcess
-                    .Where(p => p.State == PaidState.Failed)
+                    .Where(p => p.State == PaidState.Failed || p.State == PaidState.TooLowAmount)
                     .Select(f => new FailedInterestRateMessage
                     {
                         Date = f.Date,
