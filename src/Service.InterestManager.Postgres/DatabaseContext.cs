@@ -452,5 +452,27 @@ namespace Service.InterestManager.Postrges
            return await InterestRateStates.Where(t => t.WalletId == walletId)
                 .ToDictionaryAsync(t => t.AssetId, t => (t.CurrentEarnAmount, t.TotalEarnAmount));
         }
+        
+        public async Task<Dictionary<string, decimal>> GetCalculatedAmountAsync(DateTime start, DateTime end)
+        {
+            var list  = await InterestRateCalculationCollection
+                .Where(a => a.Date >= start && a.Date <= end)
+                .GroupBy(a => a.Symbol)
+                .Select(a => new {Symbol = a.Key, Amount = a.Sum(x => x.Amount)})
+                .ToListAsync();
+
+            return list.ToDictionary(k => k.Symbol, v => v.Amount);
+        }
+        
+        public async Task<Dictionary<string, decimal>> GetPaidAmountAsync(DateTime start, DateTime end)
+        {
+            var list  = await InterestRatePaidCollection
+                .Where(a => a.Date >= start && a.Date <= end && a.State == PaidState.Completed)
+                .GroupBy(a => a.Symbol)
+                .Select(a => new {Symbol = a.Key, Amount = a.Sum(x => x.Amount)})
+                .ToListAsync();
+
+            return list.ToDictionary(k => k.Symbol, v => v.Amount);
+        }
     }
 }

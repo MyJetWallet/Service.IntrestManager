@@ -4,7 +4,7 @@ namespace Service.IntrestManager.Domain.Models.Extensions
 {
     public static class PaidPeriodExtensions
     {
-        public static (DateTime start, DateTime end) ToDateRange(this PaidPeriod src)
+        public static (DateTime Start, DateTime End) ToDateRange(this PaidPeriod src)
         {
             DateTime start;
             DateTime end;

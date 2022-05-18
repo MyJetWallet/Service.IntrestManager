@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
 using Service.InterestManager.Postrges;
 using Service.IntrestManager.Domain.Models;
+using Service.IntrestManager.Domain.Models.Extensions;
 using Service.IntrestManager.Domain.Models.NoSql;
 using Service.IntrestManager.Grpc;
 using Service.IntrestManager.Grpc.Models;
@@ -177,6 +179,47 @@ namespace Service.IntrestManager.Api.Services
             {
                 _logger.LogError(ex, "Failed to GetPaidExpectedDate");
                 return new GetPaidExpectedDateResponse
+                {
+                    IsError = true,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+        
+        public async Task<GetPaidExpectedAmountResponse> GetPaidExpectedAmountAsync(GetPaidExpectedAmountRequest request)
+        {
+            try
+            {
+                var serviceConfig = _myNoSqlServerDataReader.Get().First();
+                var range = serviceConfig.Config.PaidPeriod.ToDateRange();
+                await using var ctx = _databaseContextFactory.Create();
+
+                var calculatedAmountByAsset = await ctx.GetCalculatedAmountAsync(range.Start, range.End);
+                var paidAmountByAsset = await ctx.GetPaidAmountAsync(range.Start, range.End);
+                var expectedAmountByAsset = new Dictionary<string, decimal>();
+
+                foreach (var amountByAsset in calculatedAmountByAsset)
+                {
+                    if (paidAmountByAsset.TryGetValue(amountByAsset.Key, out var paidAmount))
+                    {
+                        expectedAmountByAsset[amountByAsset.Key] = amountByAsset.Value - paidAmount;
+                    }
+                    else
+                    {
+                        expectedAmountByAsset[amountByAsset.Key] = amountByAsset.Value;
+                    }
+                }
+
+                return new GetPaidExpectedAmountResponse
+                {
+                    ExpectedAmountByAsset = expectedAmountByAsset
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to GetPaidExpectedAmount");
+                
+                return new GetPaidExpectedAmountResponse
                 {
                     IsError = true,
                     ErrorMessage = ex.Message
