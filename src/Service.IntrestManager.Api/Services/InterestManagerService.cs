@@ -162,7 +162,7 @@ namespace Service.IntrestManager.Api.Services
             }
         }
         
-        public async Task<GetPaidExpectedDateResponse> GetPaidExpectedDateAsync(GetPaidExpectedDateResponse request)
+        public async Task<GetPaidExpectedDateResponse> GetPaidExpectedDateAsync(GetPaidExpectedDateRequest request)
         {
             try
             {

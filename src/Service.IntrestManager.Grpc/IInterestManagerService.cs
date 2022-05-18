@@ -20,7 +20,7 @@ namespace Service.IntrestManager.Grpc
         [OperationContract]
         Task<RetryPaidByCreatedDateResponse> RetryPaidByCreatedDateAsync(RetryPaidByCreatedDateRequest request);
         [OperationContract]
-        Task<GetPaidExpectedDateResponse> GetPaidExpectedDateAsync(GetPaidExpectedDateResponse request);
+        Task<GetPaidExpectedDateResponse> GetPaidExpectedDateAsync(GetPaidExpectedDateRequest request);
         [OperationContract]
         Task<GetPaidExpectedAmountResponse> GetPaidExpectedAmountAsync(GetPaidExpectedAmountRequest request);
     }
