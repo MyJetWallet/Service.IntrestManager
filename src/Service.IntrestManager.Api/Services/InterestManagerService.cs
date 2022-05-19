@@ -196,7 +196,7 @@ namespace Service.IntrestManager.Api.Services
                 var range = paidPeriod.ToDateRange();
                 await using var ctx = _databaseContextFactory.Create();
 
-                var calculatedAmountByAsset = await ctx.GetCalculatedAmountAsync(range.Start, range.End);
+                var calculatedAmountByAsset = await ctx.GetCalculatedAmountAsync(range.Start, range.End, true);
                 var paidAmountByAsset = await ctx.GetPaidAmountAsync(range.Start, range.End);
                 var expectedAmountByAsset = new Dictionary<string, decimal>();
 

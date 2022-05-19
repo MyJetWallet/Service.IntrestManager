@@ -453,26 +453,34 @@ namespace Service.InterestManager.Postrges
                 .ToDictionaryAsync(t => t.AssetId, t => (t.CurrentEarnAmount, t.TotalEarnAmount));
         }
         
-        public async Task<Dictionary<string, decimal>> GetCalculatedAmountAsync(DateTime start, DateTime end)
+        public async Task<Dictionary<string, decimal>> GetCalculatedAmountAsync(DateTime start, DateTime end, bool onlyPositive = false)
         {
-            var list  = await InterestRateCalculationCollection
+            var query = InterestRateCalculationCollection.AsNoTracking();
+
+            if (onlyPositive)
+            {
+                query = query.Where(a => a.Amount > 0);
+            }
+            
+            var collection  = await query
                 .Where(a => a.Date >= start && a.Date <= end)
                 .GroupBy(a => a.Symbol)
                 .Select(a => new {Symbol = a.Key, Amount = a.Sum(x => x.Amount)})
-                .ToListAsync();
+                .ToArrayAsync();
 
-            return list.ToDictionary(k => k.Symbol, v => v.Amount);
+            return collection.ToDictionary(k => k.Symbol, v => v.Amount);
         }
         
         public async Task<Dictionary<string, decimal>> GetPaidAmountAsync(DateTime start, DateTime end)
         {
-            var list  = await InterestRatePaidCollection
+            var query = InterestRatePaidCollection.AsNoTracking()
                 .Where(a => a.Date >= start && a.Date <= end && a.State == PaidState.Completed)
                 .GroupBy(a => a.Symbol)
-                .Select(a => new {Symbol = a.Key, Amount = a.Sum(x => x.Amount)})
-                .ToListAsync();
+                .Select(a => new {Symbol = a.Key, Amount = a.Sum(x => x.Amount)});
+            
+            var collection = await query.ToArrayAsync();
 
-            return list.ToDictionary(k => k.Symbol, v => v.Amount);
+            return collection.ToDictionary(k => k.Symbol, v => v.Amount);
         }
     }
 }
