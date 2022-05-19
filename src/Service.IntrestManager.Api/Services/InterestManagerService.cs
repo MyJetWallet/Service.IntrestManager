@@ -17,16 +17,16 @@ namespace Service.IntrestManager.Api.Services
     {
         private readonly ILogger<InterestManagerService> _logger;
         private readonly DatabaseContextFactory _databaseContextFactory;
-        private readonly IMyNoSqlServerDataReader<InterestManagerConfigNoSql> _myNoSqlServerDataReader;
+        private readonly IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> _myNoSqlServerDataWriter;
 
         public InterestManagerService(ILogger<InterestManagerService> logger, 
             DatabaseContextFactory databaseContextFactory,
-            IMyNoSqlServerDataReader<InterestManagerConfigNoSql> myNoSqlServerDataReader
+            IMyNoSqlServerDataWriter<InterestManagerConfigNoSql> myNoSqlServerDataWriter
             )
         {
             _logger = logger;
             _databaseContextFactory = databaseContextFactory;
-            _myNoSqlServerDataReader = myNoSqlServerDataReader;
+            _myNoSqlServerDataWriter = myNoSqlServerDataWriter;
         }
 
         public async Task<GetCalculationHistoryResponse> GetCalculationHistoryAsync()
@@ -166,13 +166,14 @@ namespace Service.IntrestManager.Api.Services
         {
             try
             {
-                var expectedDate = await GetPaidExpectedDateAsync();
-                var serviceConfig = _myNoSqlServerDataReader.Get().FirstOrDefault();
+                var serviceConfigs = await _myNoSqlServerDataWriter.GetAsync();
+                var paidPeriod = serviceConfigs.First().Config.PaidPeriod;
+                var expectedDate = await GetPaidExpectedDateAsync(paidPeriod);
 
                 return new GetPaidExpectedDateResponse
                 {
                     ExpectedDate = expectedDate,
-                    Period = serviceConfig.Config.PaidPeriod
+                    Period = paidPeriod
                 };
             }
             catch (Exception ex)
@@ -190,8 +191,9 @@ namespace Service.IntrestManager.Api.Services
         {
             try
             {
-                var serviceConfig = _myNoSqlServerDataReader.Get().First();
-                var range = serviceConfig.Config.PaidPeriod.ToDateRange();
+                var serviceConfigs = await _myNoSqlServerDataWriter.GetAsync();
+                var paidPeriod = serviceConfigs.First().Config.PaidPeriod;
+                var range = paidPeriod.ToDateRange();
                 await using var ctx = _databaseContextFactory.Create();
 
                 var calculatedAmountByAsset = await ctx.GetCalculatedAmountAsync(range.Start, range.End);
@@ -227,9 +229,8 @@ namespace Service.IntrestManager.Api.Services
             }
         }
 
-        private async Task<DateTime> GetPaidExpectedDateAsync()
+        private async Task<DateTime> GetPaidExpectedDateAsync(PaidPeriod paidPeriod)
         {
-            var serviceConfig = _myNoSqlServerDataReader.Get().FirstOrDefault();
             await using var ctx = _databaseContextFactory.Create();
             var lastPaid = ctx.GetLastPaidHistory();
             
@@ -238,7 +239,7 @@ namespace Service.IntrestManager.Api.Services
                 return DateTime.UtcNow;
             }
 
-            switch (serviceConfig?.Config?.PaidPeriod)
+            switch (paidPeriod)
             {
                 case PaidPeriod.Day:
                 {
@@ -282,7 +283,7 @@ namespace Service.IntrestManager.Api.Services
 
                     return new DateTime(year, month, 1);
                 }
-                default: throw new NotSupportedException($"Period {serviceConfig?.Config?.PaidPeriod}");
+                default: throw new NotSupportedException($"Period {paidPeriod}");
             }
         }
     }

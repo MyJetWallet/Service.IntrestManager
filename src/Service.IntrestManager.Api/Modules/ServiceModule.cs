@@ -16,8 +16,6 @@ namespace Service.IntrestManager.Api.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            var myNoSqlClient = builder.CreateNoSqlClient(Program.Settings.MyNoSqlReaderHostPort, Program.LogFactory);
-
             builder.RegisterType<DatabaseContextFactory>().AsSelf().SingleInstance();
             
             builder.RegisterMyNoSqlWriter<InterestRateSettingsNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
@@ -26,7 +24,6 @@ namespace Service.IntrestManager.Api.Modules
                 InterestManagerConfigNoSql.TableName);
             builder.RegisterMyNoSqlWriter<InterestRateByWalletNoSql>(Program.ReloadedSettings(e => e.MyNoSqlWriterUrl),
                 InterestRateByWalletNoSql.TableName);
-            builder.RegisterMyNoSqlReader<InterestManagerConfigNoSql>(myNoSqlClient, InterestManagerConfigNoSql.TableName);
 
             builder
                 .RegisterType<InterestRateSettingsStorage>()
